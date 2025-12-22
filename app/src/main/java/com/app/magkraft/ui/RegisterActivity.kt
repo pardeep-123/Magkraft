@@ -3,6 +3,7 @@ package com.app.magkraft.ui
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Size
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -12,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -25,31 +27,31 @@ import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.UserDao
 import com.app.magkraft.data.local.db.UserEntity
-import com.app.magkraft.ml.FaceCropper
 import com.app.magkraft.ml.FaceOverlayView
 import com.app.magkraft.ml.FaceRecognizer
+import com.app.magkraft.ml.RegisterAnalyzer
 import com.app.magkraft.utils.ImageUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var capturedFace: Bitmap
+    private var capturedFace: Bitmap? = null
     private lateinit var userDao: UserDao
-    lateinit var btn: Button
-    lateinit var btnSave: Button
-    lateinit var btnTakePhoto: Button
-    lateinit var etName: EditText
-    lateinit var etEmpId: EditText
-    lateinit var etGroup: EditText
-    lateinit var etDesignation: EditText
-    lateinit var ivFace: ImageView
-
+    private lateinit var btn: Button
+    private lateinit var btnSave: Button
+    private lateinit var btnTakePhoto: Button
+    private lateinit var etName: EditText
+    private lateinit var etEmpId: EditText
+    private lateinit var etGroup: EditText
+    private lateinit var etDesignation: EditText
+    private lateinit var ivFace: ImageView
     private var isImageCaptured = false
-    private lateinit var imageCapture: ImageCapture
 
     private lateinit var previewContainer: View
     private lateinit var previewView: PreviewView
@@ -57,31 +59,44 @@ class RegisterActivity : AppCompatActivity() {
     private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var faceOverlay: FaceOverlayView
 
+    private lateinit var imageAnalysis: ImageAnalysis
+    private lateinit var cameraExecutor: ExecutorService
+
 
     private fun startCamera() {
-
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
         cameraProviderFuture.addListener({
+            cameraProvider = cameraProviderFuture.get()
 
-            val cameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder().setTargetAspectRatio(AspectRatio.RATIO_4_3).build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
-            }
-
-            imageCapture = ImageCapture.Builder()
+            val preview = Preview.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .build()
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
+                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+
+            imageAnalysis = ImageAnalysis.Builder()
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+//                .setTargetResolution(Size(640, 480))  // Faster
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setImageQueueDepth(1)
+                .build()
+
+            // ✅ LIVE PREVIEW ANALYZER (shows face position)
+            imageAnalysis.setAnalyzer(cameraExecutor, RegisterAnalyzer(
+                onFaceReady = { faceBitmap ->
+                    // Live preview only - NO saving
+                    runOnUiThread {
+                        ivFace.setImageBitmap(faceBitmap)
+                    }
+                }
+            ))
+
+            cameraProvider!!.unbindAll()
+            cameraProvider!!.bindToLifecycle(
                 this,
                 CameraSelector.DEFAULT_FRONT_CAMERA,
                 preview,
-                imageCapture
+                imageAnalysis
             )
-
         }, ContextCompat.getMainExecutor(this))
     }
 
@@ -101,7 +116,8 @@ class RegisterActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         faceOverlay = findViewById(R.id.faceOverlay)
         userDao = AppDatabase.getDatabase(this).userDao()
-
+// ✅ Initialize executor
+        cameraExecutor = Executors.newSingleThreadExecutor()
         btn.setOnClickListener {
             previewContainer.visibility = View.VISIBLE
             startCamera()
@@ -112,14 +128,18 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         btnTakePhoto.setOnClickListener {
-            capturePhoto()
+
+
+            // ✅ Stop live preview
+            imageAnalysis.clearAnalyzer()
+
+            // ✅ Single shot capture using PreviewView
+            capturePhoto()  // Your existing fast method
         }
-
-
     }
 
     private fun closeCamera() {
-        previewContainer.visibility = View.GONE
+//        previewContainer.visibility = View.GONE
         cameraProvider?.unbindAll()
     }
 
@@ -130,95 +150,59 @@ class RegisterActivity : AppCompatActivity() {
         val group = etGroup.text.toString()
         val etDesignation = etDesignation.text.toString()
 
-        if (name.isEmpty() || empId.isEmpty() || group.isEmpty() || !::capturedFace.isInitialized) {
+        if (name.isEmpty() || empId.isEmpty() || group.isEmpty() || capturedFace == null) {
             Toast.makeText(this, "Fill all fields and capture face", Toast.LENGTH_LONG).show()
             return
         }
 
         CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val embedding = FaceRecognizer.getEmbedding(capturedFace!!)
+                val imageBytes = bitmapToByteArray(capturedFace!!)
 
-            val embedding = FaceRecognizer.getEmbedding(capturedFace)
-            val imageBytes = bitmapToByteArray(capturedFace)
+                val user = UserEntity(
+                    empId = empId,
+                    name = name,
+                    designation = etDesignation,
+                    groupName = group,
+                    embedding = embedding,
+                    image = imageBytes
+                )
+                CoroutineScope(Dispatchers.IO).launch {
+                    userDao.insertUser(user)
+                }
 
-            val user = UserEntity(
-                empId = empId,
-                name = name,
-                designation = etDesignation,
-                groupName = group,
-                embedding = embedding,
-                image = imageBytes
-            )
-            CoroutineScope(Dispatchers.IO).launch {
-                userDao.insertUser(user)
-            }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        "User registered successfully",
+                        Toast.LENGTH_LONG
+                    ).show()
 
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@RegisterActivity, "User registered successfully", Toast.LENGTH_LONG).show()
+                    finish()
+                }
 
-                finish()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        "Registration failed: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
-
     private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
         return stream.toByteArray()
     }
 
-//    private fun capturePhoto() {
-//
-//        imageCapture.takePicture(
-//            ContextCompat.getMainExecutor(this),
-//            object : ImageCapture.OnImageCapturedCallback() {
-//
-//                override fun onCaptureSuccess(image: ImageProxy) {
-//
-//                    val bitmap = ImageUtils.imageProxyToBitmap(image)
-//                    image.close()
-//
-//                    bitmap?.let { fullBitmap ->
-//
-//                        // ✅ USE EXISTING OVERLAY VIEW (VERY IMPORTANT)
-//                        val ovalRect = faceOverlay.getOvalRect()
-//
-//                        val faceBitmap = FaceCropper.crop(
-//                            fullBitmap,
-//                            ovalRect,
-//                            faceOverlay.width,
-//                            faceOverlay.height
-//                        )
-//
-//                        // ✅ SAVE & SHOW CROPPED FACE (NOT FULL IMAGE)
-//                        capturedFace = faceBitmap
-//                        ivFace.setImageBitmap(capturedFace)
-//
-//                        isImageCaptured = true
-//                        closeCamera()
-//                    }
-//                }
-//
-//                override fun onError(exception: ImageCaptureException) {
-//                    Toast.makeText(
-//                        this@RegisterActivity,
-//                        "Capture failed: ${exception.message}",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                }
-//            }
-//        )
-//    }
-
-
     private fun capturePhoto() {
-
-        // 1️⃣ Get EXACT preview frame (same as overlay)
         val previewBitmap = previewView.bitmap ?: return
-
-        // 2️⃣ Get overlay oval rect
         val ovalRect = faceOverlay.getOvalRect()
 
-        // 3️⃣ Crop directly (NO scaling math needed)
         val faceBitmap = Bitmap.createBitmap(
             previewBitmap,
             ovalRect.left.toInt(),
@@ -227,13 +211,23 @@ class RegisterActivity : AppCompatActivity() {
             ovalRect.height().toInt()
         )
 
-        // 4️⃣ Show cropped face ONLY
+        // ✅ Safe recycle
+        capturedFace?.recycle()
         capturedFace = faceBitmap
-        ivFace.setImageBitmap(faceBitmap)
+        ivFace.setImageBitmap(capturedFace)
 
-        // 5️⃣ Stop camera
-        closeCamera()
+        isImageCaptured = true
+        btnSave.isEnabled = true  // Enable save button
+
+        previewBitmap.recycle()
+        previewContainer.visibility = View.GONE
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        capturedFace?.recycle()
+        capturedFace = null
+
+    }
 
 }

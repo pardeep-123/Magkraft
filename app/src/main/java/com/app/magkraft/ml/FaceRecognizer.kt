@@ -11,6 +11,7 @@ import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import androidx.core.graphics.scale
 import androidx.core.graphics.get
+import com.app.magkraft.utils.MyApp
 
 object FaceRecognizer {
 
@@ -20,6 +21,16 @@ object FaceRecognizer {
 
     private lateinit var interpreter: Interpreter
 
+//    private val interpreter: Interpreter by lazy {
+//        val context = getAppContext() // See below
+//        val model = loadModelFile(context, MODEL_NAME)
+//        Interpreter(model)
+//    }
+
+    private fun getAppContext(): Context {
+        return MyApp.instance // Singleton reference
+    }
+
     fun initialize(context: Context) {
         if (::interpreter.isInitialized) return
         val model = loadModelFile(context, MODEL_NAME)
@@ -27,6 +38,9 @@ object FaceRecognizer {
     }
 
     fun getEmbedding(faceBitmap: Bitmap): FloatArray {
+        if (!::interpreter.isInitialized) {
+            throw IllegalStateException("FaceRecognizer not initialized. Call initialize() first.")
+        }
 
         // 1️⃣ Resize face
         val resized = Bitmap.createScaledBitmap(

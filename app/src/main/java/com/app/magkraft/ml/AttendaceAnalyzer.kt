@@ -17,6 +17,9 @@ class AttendanceAnalyzer(
     private val onFaceDetected: (Bitmap) -> Unit
 ) : ImageAnalysis.Analyzer {
 
+    private var lastProcessTime = 0L
+    private val PROCESS_INTERVAL_MS = 500L  // Process every 500ms
+
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
@@ -26,6 +29,12 @@ class AttendanceAnalyzer(
 
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
+        val now = System.currentTimeMillis()
+        if (now - lastProcessTime < PROCESS_INTERVAL_MS) {
+            imageProxy.close()
+            return
+        }
+        lastProcessTime = now
 
         val mediaImage = imageProxy.image ?: run {
             imageProxy.close()

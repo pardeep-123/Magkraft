@@ -15,6 +15,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -96,6 +97,11 @@ class AttendanceActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+//        AppCompatDelegate.setDefaultNightMode(
+//            AppCompatDelegate.MODE_NIGHT_NO
+//        );
+
         setContentView(R.layout.activity_attendance)
 
         previewView = findViewById(R.id.previewView)

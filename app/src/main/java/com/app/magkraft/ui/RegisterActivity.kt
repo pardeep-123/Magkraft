@@ -5,12 +5,14 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Size
 import android.view.View
+import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -22,7 +24,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.UserDao
@@ -61,6 +65,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var imageAnalysis: ImageAnalysis
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var statusBarBackgroundView : View
 
 
     private fun startCamera() {
@@ -81,7 +86,8 @@ class RegisterActivity : AppCompatActivity() {
                 .build()
 
             // ✅ LIVE PREVIEW ANALYZER (shows face position)
-            imageAnalysis.setAnalyzer(cameraExecutor, RegisterAnalyzer(
+            imageAnalysis.setAnalyzer(
+                cameraExecutor, RegisterAnalyzer(
                 onFaceReady = { faceBitmap ->
                     // Live preview only - NO saving
                     runOnUiThread {
@@ -100,10 +106,28 @@ class RegisterActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+    private fun setStatusBarColor(window: Window, statusBarBgView: View) {
+        statusBarBgView.setBackgroundResource(R.drawable.maroon_black_gradient_bg)
+        ViewCompat.setOnApplyWindowInsetsListener(statusBarBgView) { view, insets ->
+            val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updateLayoutParams {
+                height = systemBarsInsets.top
+            }
+            val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+            insetsController.isAppearanceLightStatusBars = false
+            WindowInsetsCompat.CONSUMED
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        AppCompatDelegate.setDefaultNightMode(
+//            AppCompatDelegate.MODE_NIGHT_NO
+//        );
         setContentView(R.layout.activity_register)
+
+
+
         btn = findViewById(R.id.btnCapture)
         btnSave = findViewById(R.id.btnSave)
         btnTakePhoto = findViewById(R.id.btnTakePhoto)
@@ -115,6 +139,7 @@ class RegisterActivity : AppCompatActivity() {
         previewContainer = findViewById(R.id.previewContainer)
         previewView = findViewById(R.id.previewView)
         faceOverlay = findViewById(R.id.faceOverlay)
+//        statusBarBackgroundView = findViewById(R.id.status_bar_background_view)
         userDao = AppDatabase.getDatabase(this).userDao()
 // ✅ Initialize executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -135,6 +160,8 @@ class RegisterActivity : AppCompatActivity() {
 
             // ✅ Single shot capture using PreviewView
             capturePhoto()  // Your existing fast method
+
+//            setStatusBarColor(window, statusBarBackgroundView)
         }
     }
 
@@ -193,6 +220,7 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)

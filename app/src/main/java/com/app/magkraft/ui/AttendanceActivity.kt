@@ -8,14 +8,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Size
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.Toolbar
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -23,6 +27,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
@@ -43,6 +48,7 @@ class AttendanceActivity : AppCompatActivity() {
 
     private lateinit var previewView: PreviewView
     private lateinit var txtStatus: TextView
+    private lateinit var txtReady: TextView
     private lateinit var txtName: TextView
     private lateinit var tickImage: ImageView
     private lateinit var btnRegister: Button
@@ -98,17 +104,22 @@ class AttendanceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        AppCompatDelegate.setDefaultNightMode(
-//            AppCompatDelegate.MODE_NIGHT_NO
-//        );
-
         setContentView(R.layout.activity_attendance)
-
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        enableEdgeToEdge()
+        setSupportActionBar(toolbar)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = ContextCompat.getColor(
+            this,
+            R.color.mid_color
+        )
+        supportActionBar?.setDisplayShowTitleEnabled(false)
         previewView = findViewById(R.id.previewView)
         cameraExecutor = Executors.newSingleThreadExecutor()
         previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
 
         txtStatus = findViewById(R.id.txtStatus)
+        txtReady = findViewById(R.id.txtReady)
         txtName = findViewById(R.id.txtName)
         tickImage = findViewById(R.id.tickImage)
         btnRegister = findViewById(R.id.btnRegister)
@@ -121,6 +132,24 @@ class AttendanceActivity : AppCompatActivity() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_toolbar, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+
+            R.id.action_switch_admin -> {
+                startActivity(
+                    Intent(this, LoginActivity::class.java)
+                )
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     private fun saveAttendance(empId: String) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -185,6 +214,7 @@ class AttendanceActivity : AppCompatActivity() {
     private fun processFastMatch(result: UserEntity) {
         mainScope.launch(Dispatchers.Main) {
             txtStatus.text = "Attendance marked for ${result.name}"
+            txtReady.visibility = View.GONE
             txtName.text = "Designation: ${result.designation}"
             txtName.visibility = View.VISIBLE
             tickImage.visibility = View.VISIBLE
@@ -201,6 +231,7 @@ class AttendanceActivity : AppCompatActivity() {
     private fun resetUI() {
         txtStatus.text = "Align your Face In Oval"
         txtName.visibility = View.INVISIBLE
+        txtReady.visibility = View.VISIBLE
         tickImage.visibility = View.INVISIBLE
         txtName.text = ""
     }

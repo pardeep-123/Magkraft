@@ -7,6 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.R
@@ -21,7 +24,13 @@ class GroupFragment : Fragment(R.layout.fragment_group) {
    private var groupList = mutableListOf<GroupListModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.findViewById<FloatingActionButton>(R.id.fabAddGroup).updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = systemBars.bottom + 16
+            }
+            insets
+        }
         adapter = GroupAdapter(
             onEdit = { showGroupBottomSheet(it) },
             onDelete = { }

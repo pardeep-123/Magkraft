@@ -1,24 +1,17 @@
 package com.app.magkraft.ui
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Size
 import android.view.View
 import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -34,7 +27,6 @@ import com.app.magkraft.data.local.db.UserEntity
 import com.app.magkraft.ml.FaceOverlayView
 import com.app.magkraft.ml.FaceRecognizer
 import com.app.magkraft.ml.RegisterAnalyzer
-import com.app.magkraft.utils.ImageUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,7 +39,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private var capturedFace: Bitmap? = null
     private lateinit var userDao: UserDao
-    private lateinit var btn: Button
+    private lateinit var btn: ImageView
     private lateinit var btnSave: Button
     private lateinit var btnTakePhoto: Button
     private lateinit var etName: EditText
@@ -121,18 +113,13 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        AppCompatDelegate.setDefaultNightMode(
-//            AppCompatDelegate.MODE_NIGHT_NO
-//        );
         setContentView(R.layout.activity_register)
 
-
-
-        btn = findViewById(R.id.btnCapture)
+        btn = findViewById(R.id.btnEdit)
         btnSave = findViewById(R.id.btnSave)
         btnTakePhoto = findViewById(R.id.btnTakePhoto)
         etName = findViewById(R.id.etName)
-        etEmpId = findViewById(R.id.etEmpId)
+        etEmpId = findViewById(R.id.etEmployeeId)
         etGroup = findViewById(R.id.etGroup)
         etDesignation = findViewById(R.id.etDesignation)
         ivFace = findViewById(R.id.ivFace)

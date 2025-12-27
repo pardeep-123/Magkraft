@@ -1,60 +1,67 @@
 package com.app.magkraft.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.R
+import com.app.magkraft.ui.RegisterActivity
+import com.app.magkraft.ui.adapters.EmployeeAdapter
+import com.app.magkraft.ui.model.EmployeeListModel
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.switchmaterial.SwitchMaterial
 
-/**
- * A simple [Fragment] subclass.
- * Use the [EmployeeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class EmployeeFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+class EmployeeFragment : Fragment(R.layout.fragment_employee) {
+    private lateinit var adapter: EmployeeAdapter
+    private var employeeList = mutableListOf<EmployeeListModel>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_employee, container, false)
-    }
-
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment EmployeeFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            EmployeeFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.findViewById<FloatingActionButton>(R.id.fabAddEmployee).updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = systemBars.bottom + 16
             }
+            insets
+        }
+        adapter = EmployeeAdapter(
+            onEdit = {  },
+            onDelete = { }
+        )
+
+        view.findViewById<RecyclerView>(R.id.rvEmployees).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@EmployeeFragment.adapter
+        }
+
+        view.findViewById<FloatingActionButton>(R.id.fabAddEmployee)
+            .setOnClickListener {
+                startActivity(
+                    Intent(requireContext(), RegisterActivity::class.java)
+                )
+            }
+        employeeList.clear()
+        employeeList.add(0,EmployeeListModel(1,"Sam","ABVP",true))
+        employeeList.add(1,EmployeeListModel(2,"Will","NTPC",false))
+        employeeList.add(2,EmployeeListModel(3,"Jamie","Aus",true))
+        employeeList.add(3,EmployeeListModel(4,"Pardeep","BJP",false))
+        employeeList.add(4,EmployeeListModel(5,"Jimmy","AAP",false))
+        employeeList.add(5,EmployeeListModel(6,"Anmol","CONG",true))
+        employeeList.add(6,EmployeeListModel(7,"Cummins","RJD", false))
+        adapter.submitList(employeeList)
+//        observeGroups()
     }
+
+
+
 }

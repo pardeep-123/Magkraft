@@ -93,7 +93,11 @@ class AttendanceActivity : AppCompatActivity() {
             FaceRecognizer.initialize(this)
             loadUsers()
 
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 startCamera()
             } else {
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -108,6 +112,11 @@ class AttendanceActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         enableEdgeToEdge()
         setSupportActionBar(toolbar)
+        // Set white overflow icon
+        toolbar.overflowIcon =
+            ContextCompat.getDrawable(this, R.drawable.more)?.apply {
+                setTint(ContextCompat.getColor(this@AttendanceActivity, android.R.color.white))
+            }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = ContextCompat.getColor(
             this,

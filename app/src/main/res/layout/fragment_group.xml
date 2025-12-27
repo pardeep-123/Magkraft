@@ -16,8 +16,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:layout_marginBottom="32dp"
         android:src="@drawable/add"
-        android:tint="@color/white"
+        app:tint="@color/white"
         android:backgroundTint="@color/mid_color"
         app:layout_anchorGravity="bottom|end"
         app:layout_anchor="@id/rvGroups"/>

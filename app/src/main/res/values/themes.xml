@@ -37,5 +37,12 @@
         <item name="cornerSize">50%</item>
     </style>
 
-
+    <style name="FilterField">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/bg_dropdown</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:drawableEnd">@drawable/ic_arrow_down</item>
+        <item name="android:drawablePadding">8dp</item>
+    </style>
 </resources>

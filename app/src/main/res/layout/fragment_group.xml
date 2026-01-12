@@ -4,7 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
+<!--<TextView-->
+<!--    android:id="@+id/textLabel"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:text="@string/groups"-->
+<!--    android:textSize="@dimen/_15ssp"-->
+<!--    android:gravity="center"-->
+<!--    android:background="@color/mid_color"-->
+<!--    android:textColor="@color/white"-->
+<!--    android:padding="@dimen/_10sdp"-->
+<!--    />-->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvGroups"
         android:layout_width="match_parent"

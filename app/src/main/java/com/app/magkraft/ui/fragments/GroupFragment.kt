@@ -67,7 +67,6 @@ class GroupFragment : Fragment(R.layout.fragment_group) {
             .setOnClickListener {
                 showGroupBottomSheet()
             }
-
     }
 
     private fun showGroupBottomSheet(existing: GroupListModel? = null) {

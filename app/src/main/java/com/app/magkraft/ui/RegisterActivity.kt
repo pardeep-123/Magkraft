@@ -11,6 +11,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
@@ -41,6 +42,7 @@ import com.app.magkraft.model.CommonResponse
 import com.app.magkraft.network.ApiClient
 import com.app.magkraft.ui.adapters.GroupPopupAdapter
 import com.app.magkraft.ui.adapters.LocationPopupAdapter
+import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
 import com.google.android.material.switchmaterial.SwitchMaterial
@@ -83,6 +85,11 @@ class RegisterActivity : BaseActivity() {
 
     private var groupList = ArrayList<GroupListModel>()
     private var locationList = ArrayList<LocationListModel>()
+
+    private var employeeData: EmployeeListModel? = null
+
+    var embeddingBase64 = ""
+    var employeeId = ""
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
@@ -152,6 +159,25 @@ class RegisterActivity : BaseActivity() {
         previewView = findViewById(R.id.previewView)
         faceOverlay = findViewById(R.id.faceOverlay)
 
+        /**
+         * Set values in case of user edit
+         */
+
+        employeeData = intent.getParcelableExtra("data")
+        employeeData?.let {
+            etName.setText(it.Name)
+            etDesignation.setText(it.Designation)
+            etEmpId.setText(it.Code.toString())
+            findViewById<SwitchMaterial>(R.id.switchActive).isChecked = it.IsActive
+            etGroup.setText(it.GroupName)
+            etLocation.setText(it.LocationName)
+            groupId = it.GroupId.toString()
+            locationId = it.LocationId.toString()
+            embeddingBase64 = it.Photo
+            employeeId = it.Id.toString()
+
+        }
+
 //        statusBarBackgroundView = findViewById(R.id.status_bar_background_view)
         userDao = AppDatabase.getDatabase(this).userDao()
 // ✅ Initialize executor
@@ -219,24 +245,29 @@ class RegisterActivity : BaseActivity() {
 
         val etDesignation = etDesignation.text.toString()
 
-        if (name.isEmpty() || empId.isEmpty() || etDesignation.isEmpty() || groupId == "" || locationId == "" || capturedFace == null) {
+        if (name.isEmpty() || empId.isEmpty() || etDesignation.isEmpty() || groupId == "" || locationId == "" || (employeeId.isEmpty() && capturedFace == null)) {
             Toast.makeText(this, "Fill all fields and capture face", Toast.LENGTH_LONG).show()
             return
         } else {
 
-            lifecycleScope.launch {
+        //    lifecycleScope.launch {
 
                 try {
-                    val embedding =
-                        withContext(Dispatchers.Default) {
-                            FaceRecognizer.getEmbedding(capturedFace!!)
-                        }
-//                val imageBytes = bitmapToByteArray(capturedFace!!)
-                    val embeddingBase64 =
-                        withContext(Dispatchers.Default) {
-                            floatArrayToBase64(embedding)
-                        }
-                    addEmployee(embeddingBase64);
+                    if (employeeId.isEmpty()) {
+//                        val embedding =
+//                            withContext(Dispatchers.Default) {
+//                                FaceRecognizer.getEmbedding(capturedFace!!)
+//                            }
+////                val imageBytes = bitmapToByteArray(capturedFace!!)
+//                        embeddingBase64 =
+//                            withContext(Dispatchers.Default) {
+//                                floatArrayToBase64(embedding)
+//                            }
+
+                        addEmployee(embeddingBase64,1)
+                    } else {
+                        addEmployee(embeddingBase64,2)
+                    }
 
 //                val user = UserEntity (
 //                    empId = empId,
@@ -272,7 +303,7 @@ class RegisterActivity : BaseActivity() {
                     ).show()
 
                 }
-            }
+          //  }
 
         }
     }
@@ -303,6 +334,17 @@ class RegisterActivity : BaseActivity() {
         isImageCaptured = true
         btnSave.isEnabled = true  // Enable save button
 
+        lifecycleScope.launch {
+            val embedding =
+                withContext(Dispatchers.Default) {
+                    FaceRecognizer.getEmbedding(capturedFace!!)
+                }
+//                val imageBytes = bitmapToByteArray(capturedFace!!)
+            embeddingBase64 =
+                withContext(Dispatchers.Default) {
+                    floatArrayToBase64(embedding)
+                }
+        }
         previewBitmap.recycle()
         previewContainer.visibility = View.GONE
     }
@@ -315,7 +357,7 @@ class RegisterActivity : BaseActivity() {
     }
 
 
-    private fun addEmployee(image: String) {
+    private fun addEmployee(image: String, from: Int) {
 
         showLoader()
         val status = if (findViewById<SwitchMaterial>(R.id.switchActive).isChecked) {
@@ -323,17 +365,33 @@ class RegisterActivity : BaseActivity() {
         } else {
             "0"
         }
-        val call = ApiClient.apiService.register(
-            etName.text.toString().trim(),
-            etEmpId.text.toString().trim(),
-            etDesignation.text.toString().trim(),
-            groupId,
-            locationId,
-            status,
-            "0",
-            image
+        val call = if (from == 1) {
+            ApiClient.apiService.register(
+                etName.text.toString().trim(),
+                etEmpId.text.toString().trim(),
+                etDesignation.text.toString().trim(),
+                groupId,
+                locationId,
+                status,
+                "0",
+                image
 
-        )
+            )
+        } else {
+            ApiClient.apiService.updateEmployee(
+                etName.text.toString().trim(),
+                etEmpId.text.toString().trim(),
+                etDesignation.text.toString().trim(),
+                groupId,
+                locationId,
+                status,
+                "0",
+                image,
+                employeeId
+
+            )
+        }
+
 
         call.enqueue(object : Callback<CommonResponse> {
 
@@ -353,8 +411,8 @@ class RegisterActivity : BaseActivity() {
                     finish()
 
                 } else {
-//                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
-//                    Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show()
+                    val errorMessage = getErrorMessage(response)
+                    Toast.makeText(this@RegisterActivity, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -500,4 +558,9 @@ class RegisterActivity : BaseActivity() {
         popup.elevation = 12f
         popup.showAsDropDown(anchor)
     }
+
+
+
+
+
 }

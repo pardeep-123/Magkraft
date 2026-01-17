@@ -14,4 +14,7 @@ object Constants {
     const val updatelocation = "updatelocation"
     const val deletelocation = "deletelocation"
     const val register = "addemployee"
+    const val getemployees = "getemployees"
+    const val updateemployee = "updateemployee"
+    const val deleteemployee = "deleteemployee"
 }

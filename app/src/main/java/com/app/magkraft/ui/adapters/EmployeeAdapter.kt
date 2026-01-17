@@ -38,12 +38,12 @@ class EmployeeAdapter(
 
     inner class GroupVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(item: EmployeeListModel) {
-            itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.employeeName
+            itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.Name
             itemView.findViewById<TextView>(R.id.txtEmployeeId).text =
-                "Employee Id: " + item.employeeId.toString()
+                "Employee Id: " + item.Code.toString()
             itemView.findViewById<TextView>(R.id.txtStatus).text =
-                if (item.isActive) "Active" else "Inactive"
-            if (item.isActive)
+                if (item.IsActive) "Active" else "InActive"
+            if (item.IsActive)
                 itemView.findViewById<TextView>(R.id.txtStatus)
                     .setTextColor(ctx.getColor(R.color.green))
             else

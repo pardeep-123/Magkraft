@@ -5,6 +5,7 @@ import com.app.magkraft.model.AddGroupModel
 import com.app.magkraft.model.AddLocationModel
 import com.app.magkraft.model.CommonResponse
 import com.app.magkraft.model.LoginSignupModel
+import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.utils.Constants
@@ -99,4 +100,30 @@ interface ApiCallInterface {
         @Field("IsDeleted") isDeleted: String,
         @Field("Photo") image: String,
     ): Call<CommonResponse>
+
+    @GET(Constants.getemployees)
+    fun getEmployees(): Call<List<EmployeeListModel>>
+
+    @FormUrlEncoded
+    @POST(Constants.updateemployee)
+    fun updateEmployee(
+        @Field("Name") name: String,
+        @Field("Code") code: String,
+        @Field("Designation") designation: String,
+        @Field("GroupId") groupId: String,
+        @Field("LocationId") locationId: String,
+        @Field("IsActive") isActive: String,
+        @Field("IsDeleted") isDeleted: String,
+        @Field("Photo") image: String,
+        @Field("Id") id: String,
+    ): Call<CommonResponse>
+
+    /// Delete Group
+    @FormUrlEncoded
+    @POST(Constants.deleteemployee)
+    fun deleteEmployee(
+        @Field("Id") id: String,
+
+        ): Call<CommonResponse>
+
 }

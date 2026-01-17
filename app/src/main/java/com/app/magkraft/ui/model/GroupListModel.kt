@@ -1,5 +1,9 @@
 package com.app.magkraft.ui.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import java.io.Serializable
+
 data class GroupListModel(
     val Id: Int,
     val IsActive: Boolean,
@@ -16,9 +20,17 @@ data class LocationListModel(
     val GroupName: String
 )
 
+@Parcelize
 data class EmployeeListModel(
-    val employeeId: Int = 0,
-    val employeeName: String,
-    val groupName: String,
-    val isActive: Boolean
-)
+    val Code: String,
+    val Designation: String,
+    val GroupId: Int,
+    val GroupName: String,
+    val Id: Int,
+    val IsActive: Boolean,
+    val IsDeleted: Boolean,
+    val LocationId: Int,
+    val LocationName: String,
+    val Name: String,
+    val Photo: String
+) : Parcelable

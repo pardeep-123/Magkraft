@@ -1,8 +1,14 @@
 package com.app.magkraft
 
+import android.app.Dialog
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.Window
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -37,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             R.color.mid_color
         )
         supportActionBar?.setDisplayShowTitleEnabled(false)
-
+        setupLoader()
         // Default screen
         loadFragment(HomeFragment())
     }
@@ -63,5 +69,32 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
+    }
+
+    private var loaderDialog: Dialog? = null
+
+    private fun setupLoader() {
+        loaderDialog = Dialog(this)
+        loaderDialog?.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        loaderDialog?.setContentView(R.layout.dialog_loader)
+        loaderDialog?.setCancelable(false)
+        loaderDialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+    }
+
+    fun showLoader() {
+        if (loaderDialog?.isShowing == false) {
+            loaderDialog?.show()
+        }
+    }
+
+    fun hideLoader() {
+        if (loaderDialog?.isShowing == true) {
+            loaderDialog?.dismiss()
+        }
+    }
+
+    fun showToast(ctx: Context, msg:String){
+        Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+
     }
 }

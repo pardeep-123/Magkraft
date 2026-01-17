@@ -36,8 +36,8 @@ class LocationAdapter(
 
     inner class GroupVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(item: LocationListModel) {
-            itemView.findViewById<TextView>(R.id.txtLocationName).text = item.locationName
-            itemView.findViewById<TextView>(R.id.txtAddressName).text = item.AddressName
+            itemView.findViewById<TextView>(R.id.txtLocationName).text = item.Name
+            itemView.findViewById<TextView>(R.id.txtAddressName).text = item.GroupName
 
 
             itemView.findViewById<ImageView>(R.id.btnEdit).setOnClickListener {

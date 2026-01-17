@@ -1,15 +1,19 @@
 package com.app.magkraft.ui.model
 
 data class GroupListModel(
-   val id: Int = 0,
-    val name: String,
-    val isActive: Boolean
+    val Id: Int,
+    val IsActive: Boolean,
+    val IsDeleted: Boolean,
+    val Name: String?
 )
 
 data class LocationListModel(
-    val groupId: Int = 0,
-    val locationName: String,
-    val AddressName: String
+    val Id: Int,
+    val GroupId: Int,
+    val IsActive: Boolean,
+    val IsDeleted: Boolean,
+    val Name: String,
+    val GroupName: String
 )
 
 data class EmployeeListModel(

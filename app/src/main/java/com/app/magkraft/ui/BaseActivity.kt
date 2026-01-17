@@ -45,12 +45,12 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    protected fun showToast(ctx: Context, msg:String){
+     fun showToast(ctx: Context, msg:String){
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
 
     }
 
-    protected fun getErrorMessage(response: Response<*>): String {
+     fun getErrorMessage(response: Response<*>): String {
         return try {
             val errorBody = response.errorBody()?.string()
             val jsonObject = JSONObject(errorBody ?: "")

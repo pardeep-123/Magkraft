@@ -111,10 +111,29 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_10sdp"
                     android:background="@drawable/bg_grid_item"
-                    android:cursorVisible="false"
-                    android:focusable="false"
                     android:gravity="center_vertical"
                     android:hint="Employee Id"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:padding="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Designation"
+                    android:textColor="@color/pink_color"
+                    android:textSize="14sp" />
+
+                <EditText
+                    android:id="@+id/etDesignation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:gravity="center_vertical"
+                    android:hint="Select Designation"
+                    android:background="@drawable/bg_grid_item"
                     android:imeOptions="actionDone"
                     android:inputType="text"
                     android:padding="12dp" />
@@ -140,30 +159,6 @@
                     android:focusable="false"
                     android:gravity="center_vertical"
                     android:hint="Select Group"
-                    android:inputType="none"
-                    android:padding="12dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:text="Designation"
-                    android:textColor="@color/pink_color"
-                    android:textSize="14sp" />
-
-                <EditText
-                    android:id="@+id/etDesignation"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_10sdp"
-                    android:background="@drawable/bg_grid_item"
-                    android:cursorVisible="false"
-                    android:drawableEnd="@drawable/ic_arrow_down"
-                    android:drawablePadding="8dp"
-                    android:focusable="false"
-                    android:gravity="center_vertical"
-                    android:hint="Select Designation"
                     android:inputType="none"
                     android:padding="12dp" />
 

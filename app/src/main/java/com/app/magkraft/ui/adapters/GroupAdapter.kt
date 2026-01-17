@@ -36,9 +36,9 @@ class GroupAdapter(
 
     inner class GroupVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(item: GroupListModel) {
-            itemView.findViewById<TextView>(R.id.txtGroupName).text = item.name
+            itemView.findViewById<TextView>(R.id.txtGroupName).text = item.Name
             itemView.findViewById<TextView>(R.id.txtStatus).text =
-                if (item.isActive) "Active" else "Inactive"
+                if (item.IsActive) "Active" else "Inactive"
 
             itemView.findViewById<ImageView>(R.id.btnEdit).setOnClickListener {
                 onEdit(item)

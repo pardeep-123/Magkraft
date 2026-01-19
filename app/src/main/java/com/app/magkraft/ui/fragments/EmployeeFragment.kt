@@ -114,7 +114,7 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
 
         (ctx as MainActivity).showLoader()
 
-        val call = ApiClient.apiService.deleteGroup(id)
+        val call = ApiClient.apiService.deleteEmployee(id)
 
         call.enqueue(object : Callback<CommonResponse> {
 

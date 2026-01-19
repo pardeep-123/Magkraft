@@ -1,14 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/_15sdp"
     tools:context=".ui.fragments.SetLocationFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Set Your Location"
+        android:layout_gravity="center"
+        android:textColor="@color/pink_color"
+        android:textSize="@dimen/_14ssp" />
 
-</FrameLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Group"
+        android:textColor="@color/pink_color"
+        android:textSize="@dimen/_14ssp" />
+
+    <EditText
+        android:id="@+id/etGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/bg_grid_item"
+        android:cursorVisible="false"
+        android:drawableEnd="@drawable/ic_arrow_down"
+        android:drawablePadding="8dp"
+        android:focusable="false"
+        android:gravity="center_vertical"
+        android:hint="Select Group"
+        android:textSize="@dimen/_12ssp"
+        android:inputType="none"
+        android:padding="12dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Location"
+        android:textColor="@color/pink_color"
+        android:textSize="@dimen/_14ssp" />
+
+    <EditText
+        android:id="@+id/etLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/bg_grid_item"
+        android:cursorVisible="false"
+        android:drawableEnd="@drawable/ic_arrow_down"
+        android:drawablePadding="8dp"
+        android:focusable="false"
+        android:gravity="center_vertical"
+        android:hint="Select Location"
+        android:textSize="@dimen/_12ssp"
+        android:inputType="none"
+        android:padding="12dp" />
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="Save"
+         />
+
+</LinearLayout>

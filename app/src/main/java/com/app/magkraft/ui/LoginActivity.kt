@@ -13,6 +13,7 @@ import com.app.magkraft.MainActivity
 import com.app.magkraft.R
 import com.app.magkraft.model.LoginSignupModel
 import com.app.magkraft.network.ApiClient
+import com.app.magkraft.utils.AuthPref
 import com.google.android.material.textfield.TextInputEditText
 import retrofit2.Call
 import retrofit2.Callback
@@ -23,6 +24,8 @@ class LoginActivity : BaseActivity() {
     private lateinit var loginBtn: AppCompatButton
     private lateinit var emailET: TextInputEditText
     private lateinit var passwordET: TextInputEditText
+
+    var authPref: AuthPref? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +51,7 @@ class LoginActivity : BaseActivity() {
             }
 
         }
+        authPref = AuthPref(this)
     }
 
 
@@ -70,14 +74,16 @@ class LoginActivity : BaseActivity() {
                     val json = response.body()!!
                     Log.d("LOGIN_SUCCESS", json.toString())
 
-
                     if (response.body()?.status == "1") {
+                        authPref?.saveToken(response.body()?.token.toString())
+                        authPref?.put("userType", response.body()?.data?.UserType.toString())
+                        authPref?.put("fullName", response.body()?.data?.FullName.toString())
                         Toast.makeText(this@LoginActivity, "Login Success", Toast.LENGTH_SHORT)
                             .show()
                         startActivity(
                             Intent(this@LoginActivity, MainActivity::class.java)
                         )
-
+finish()
                     } else {
                         Toast.makeText(
                             this@LoginActivity,
@@ -88,7 +94,8 @@ class LoginActivity : BaseActivity() {
 
                 } else {
                     val errorMessage = getErrorMessage(response)
-                    Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_SHORT).show()                }
+                    Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                }
             }
 
             override fun onFailure(call: Call<LoginSignupModel>, t: Throwable) {

@@ -29,6 +29,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.app.magkraft.MainActivity
 import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.AttendanceEntity
@@ -37,6 +38,7 @@ import com.app.magkraft.ml.AttendanceAnalyzer
 import com.app.magkraft.ml.FaceMatcher
 import com.app.magkraft.ml.FaceRecognizer
 import com.app.magkraft.ml.UltraFastAnalyzer
+import com.app.magkraft.utils.AuthPref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,6 +65,9 @@ class AttendanceActivity : AppCompatActivity() {
 
     private var cameraProvider: ProcessCameraProvider? = null
     private var matchShown = false
+
+    var authPref: AuthPref ?=null
+
     private fun loadUsers() {
         lifecycleScope.launch {
             users = AppDatabase.getDatabase(this@AttendanceActivity)
@@ -112,6 +117,7 @@ class AttendanceActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         enableEdgeToEdge()
         setSupportActionBar(toolbar)
+        authPref = AuthPref(this)
         // Set white overflow icon
         toolbar.overflowIcon =
             ContextCompat.getDrawable(this, R.drawable.more)?.apply {
@@ -150,9 +156,15 @@ class AttendanceActivity : AppCompatActivity() {
         return when (item.itemId) {
 
             R.id.action_switch_admin -> {
-                startActivity(
-                    Intent(this, LoginActivity::class.java)
-                )
+                if (authPref?.isLoggedIn() == true){
+                    startActivity(
+                        Intent(this@AttendanceActivity, MainActivity::class.java)
+                    )
+                }else {
+                    startActivity(
+                        Intent(this, LoginActivity::class.java)
+                    )
+                }
                 true
             }
 

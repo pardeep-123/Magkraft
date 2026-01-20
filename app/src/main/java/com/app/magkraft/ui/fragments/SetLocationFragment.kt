@@ -38,20 +38,20 @@ class SetLocationFragment : Fragment() {
     private var locationList = ArrayList<LocationListModel>()
 
 
-    private var ctx : Context?=null
+    private var ctx: Context? = null
 
     private lateinit var etGroup: EditText
     private lateinit var etLocation: EditText
     private lateinit var saveBtn: Button
-    var auth : AuthPref?= null
+    var auth: AuthPref? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         ctx = context
     }
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_set_location, container, false)
@@ -63,7 +63,7 @@ class SetLocationFragment : Fragment() {
         etGroup = view.findViewById(R.id.etGroup)
         etLocation = view.findViewById(R.id.etLocation)
         saveBtn = view.findViewById(R.id.btnSave)
-     auth = AuthPref(ctx!!)
+        auth = AuthPref(ctx!!)
         etLocation.setOnClickListener {
             if (groupId.isEmpty()) {
                 Toast.makeText(ctx, "Select group First", Toast.LENGTH_SHORT).show()
@@ -94,9 +94,14 @@ class SetLocationFragment : Fragment() {
         }
 
         saveBtn.setOnClickListener {
-            if (groupId.isEmpty() || locationId.isEmpty()){
+            if (groupId.isEmpty() || locationId.isEmpty()) {
 
-            }else {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, HomeFragment())
+                    .addToBackStack(null)
+                    .commit()
+
+            } else {
                 auth?.putLocation("groupId", groupId)
                 auth?.putLocation("locationId", locationId)
                 auth?.putLocation("groupName", etGroup.text.toString())
@@ -114,8 +119,7 @@ class SetLocationFragment : Fragment() {
         call.enqueue(object : Callback<List<GroupListModel>> {
 
             override fun onResponse(
-                call: Call<List<GroupListModel>>,
-                response: Response<List<GroupListModel>>
+                call: Call<List<GroupListModel>>, response: Response<List<GroupListModel>>
             ) {
 //                (ctx as MainActivity).hideLoader()
 
@@ -139,17 +143,16 @@ class SetLocationFragment : Fragment() {
 
     private fun getLocationList(groupId: Int) {
 
-        (ctx as MainActivity). showLoader()
+        (ctx as MainActivity).showLoader()
 
         val call = ApiClient.apiService.getLocations()
 
         call.enqueue(object : Callback<List<LocationListModel>> {
 
             override fun onResponse(
-                call: Call<List<LocationListModel>>,
-                response: Response<List<LocationListModel>>
+                call: Call<List<LocationListModel>>, response: Response<List<LocationListModel>>
             ) {
-                (ctx as MainActivity). hideLoader()
+                (ctx as MainActivity).hideLoader()
 
                 if (response.isSuccessful && response.body() != null) {
                     locationList.clear()
@@ -164,23 +167,18 @@ class SetLocationFragment : Fragment() {
             }
 
             override fun onFailure(call: Call<List<LocationListModel>>, t: Throwable) {
-                (ctx as MainActivity). hideLoader()
+                (ctx as MainActivity).hideLoader()
                 Toast.makeText(ctx, t.localizedMessage, Toast.LENGTH_SHORT).show()
             }
         })
     }
 
     private fun showGroupPopup(
-        anchor: View,
-        groups: List<GroupListModel>,
-        onSelect: (GroupListModel) -> Unit
+        anchor: View, groups: List<GroupListModel>, onSelect: (GroupListModel) -> Unit
     ) {
         val view = layoutInflater.inflate(R.layout.popup_group_list, null)
         val popup = PopupWindow(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
+            view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true
         )
 
         val etSearch = view.findViewById<EditText>(R.id.etSearch)
@@ -206,16 +204,11 @@ class SetLocationFragment : Fragment() {
     }
 
     private fun showLocationPopup(
-        anchor: View,
-        locations: List<LocationListModel>,
-        onSelect: (LocationListModel) -> Unit
+        anchor: View, locations: List<LocationListModel>, onSelect: (LocationListModel) -> Unit
     ) {
         val view = layoutInflater.inflate(R.layout.popup_location_list, null)
         val popup = PopupWindow(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
+            view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true
         )
 
         val etSearch = view.findViewById<EditText>(R.id.etSearch)

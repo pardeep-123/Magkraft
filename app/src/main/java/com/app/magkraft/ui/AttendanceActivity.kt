@@ -52,6 +52,8 @@ class AttendanceActivity : AppCompatActivity() {
     private lateinit var txtStatus: TextView
     private lateinit var txtReady: TextView
     private lateinit var txtName: TextView
+    private lateinit var groupName: TextView
+    private lateinit var locationName: TextView
     private lateinit var tickImage: ImageView
     private lateinit var btnRegister: Button
     private lateinit var imageAnalysis: ImageAnalysis
@@ -136,6 +138,8 @@ class AttendanceActivity : AppCompatActivity() {
         txtStatus = findViewById(R.id.txtStatus)
         txtReady = findViewById(R.id.txtReady)
         txtName = findViewById(R.id.txtName)
+        groupName = findViewById(R.id.groupName)
+        locationName = findViewById(R.id.locationName)
         tickImage = findViewById(R.id.tickImage)
         btnRegister = findViewById(R.id.btnRegister)
         resetUI()
@@ -144,6 +148,13 @@ class AttendanceActivity : AppCompatActivity() {
             startActivity(
                 Intent(this@AttendanceActivity, RegisterActivity::class.java)
             )
+        }
+
+        if(authPref?.getLocation("locationId")!=null){
+            groupName.text = "Group: "+authPref?.getLocation("groupName")
+            locationName.text ="Location: "+ authPref?.getLocation("locationName")
+        }else{
+            groupName.text = " Please Set Location to Scan"
         }
     }
 

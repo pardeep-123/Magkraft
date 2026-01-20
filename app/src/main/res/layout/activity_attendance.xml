@@ -69,6 +69,24 @@
             android:text=""
             android:textSize="16sp" />
 
+        <TextView
+            android:id="@+id/groupName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/locationName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
         <Button
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"

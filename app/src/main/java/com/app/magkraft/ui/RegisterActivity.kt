@@ -11,6 +11,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
@@ -25,6 +26,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -45,6 +48,8 @@ import com.app.magkraft.ui.adapters.LocationPopupAdapter
 import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
+import com.app.magkraft.utils.AuthPref
+import com.app.magkraft.utils.EmployeeViewModel
 import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +61,7 @@ import retrofit2.Response
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.getValue
 
 class RegisterActivity : BaseActivity() {
 
@@ -91,6 +97,10 @@ class RegisterActivity : BaseActivity() {
     var embeddingBase64 = ""
     var employeeId = ""
 
+    var authPref: AuthPref ?=null
+    private val employeeViewModel: EmployeeViewModel by viewModels {
+        ViewModelProvider.AndroidViewModelFactory.getInstance(this.application)
+    }
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -158,7 +168,7 @@ class RegisterActivity : BaseActivity() {
         previewContainer = findViewById(R.id.previewContainer)
         previewView = findViewById(R.id.previewView)
         faceOverlay = findViewById(R.id.faceOverlay)
-
+        authPref = AuthPref(this)
         /**
          * Set values in case of user edit
          */
@@ -408,6 +418,15 @@ class RegisterActivity : BaseActivity() {
                         "User Added Successfully",
                         Toast.LENGTH_SHORT
                     ).show()
+
+                    if(authPref?.getLocation("groupId")!="") {
+//            getEmployeesListByGroup()
+//        }
+//                        lifecycleScope.launch(Dispatchers.IO) {
+                            employeeViewModel.syncEmployees()
+                      //  }
+                    }
+
                     finish()
 
                 } else {

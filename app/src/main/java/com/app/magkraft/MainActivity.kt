@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.Window
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +20,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.app.magkraft.ui.AttendanceActivity
 import com.app.magkraft.ui.fragments.EmployeeFragment
 import com.app.magkraft.ui.fragments.GroupFragment
@@ -52,7 +54,26 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.setDisplayShowTitleEnabled(false)
         setupLoader()
         // Default screen
-        loadFragment(HomeFragment(),"Home")
+
+        loadHomeFragment()
+        onBackPressedDispatcher.addCallback(this,object :
+            OnBackPressedCallback(true){
+            override fun handleOnBackPressed() {
+
+                val fm = supportFragmentManager
+
+                if (fm.backStackEntryCount > 0) {
+                    // Clear all fragments and go to Home
+                    fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+                    loadHomeFragment()
+                } else {
+                    // We are already on HomeFragment
+                    finish()
+                }
+            }
+
+        }
+        )
     }
 
 
@@ -77,6 +98,11 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    private fun loadHomeFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, HomeFragment(), "HOME")
+            .commit()
+    }
     private fun loadFragment(fragment: Fragment, tag: String) {
 
         val currentFragment =

@@ -8,7 +8,9 @@ import com.app.magkraft.model.LoginSignupModel
 import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
+import com.app.magkraft.ui.model.ViewReportsModelItem
 import com.app.magkraft.utils.Constants
+import okhttp3.Response
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -125,5 +127,33 @@ interface ApiCallInterface {
         @Field("Id") id: String,
 
         ): Call<CommonResponse>
+    @FormUrlEncoded
+    @POST(Constants.getemployeesbygroupid)
+    suspend fun getEmployeesByGroupId(
+        @Field("GroupId") groupId: String
+    ): retrofit2.Response<List<EmployeeListModel>>
+
+    @FormUrlEncoded
+    @POST(Constants.addemplog)
+    fun markAttendance(
+        @Field("EmpID") empId: String,
+        @Field("LocationId") locationId: String,
+        @Field("Timestamp") timeStamp: String,
+    ): Call<CommonResponse>
+
+
+    @FormUrlEncoded
+    @POST(Constants.getemployeesbygroupid)
+     fun getEmployeesByGroupId1(
+        @Field("GroupId") groupId: String
+    ): Call<List<EmployeeListModel>>
+
+    @FormUrlEncoded
+    @POST(Constants.getemplog)
+    fun viewReports(
+        @Field("EmployeeId") employeeId: String,
+        @Field("Month") month: String,
+        @Field("Year") year: String
+    ): Call<List<ViewReportsModelItem>>
 
 }

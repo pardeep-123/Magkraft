@@ -88,5 +88,55 @@ object ImageUtils {
         return bitmap
     }
 
+    fun cropFaceFromYuv(
+        imageProxy: ImageProxy,
+        boundingBox: Rect
+    ): Bitmap {
 
+        // 1️⃣ Convert YUV → Bitmap (only ONCE)
+        val bitmap = imageProxy.toBitmap()
+
+        // 2️⃣ Clamp bounding box safely
+        val left = boundingBox.left.coerceAtLeast(0)
+        val top = boundingBox.top.coerceAtLeast(0)
+        val right = boundingBox.right.coerceAtMost(bitmap.width)
+        val bottom = boundingBox.bottom.coerceAtMost(bitmap.height)
+
+        val width = right - left
+        val height = bottom - top
+
+        // 3️⃣ Crop face
+        return Bitmap.createBitmap(bitmap, left, top, width, height)
+    }
+
+    // 🔥 CameraX YUV → Bitmap (fast + stable)
+    private fun ImageProxy.toBitmap(): Bitmap {
+        val yBuffer = planes[0].buffer
+        val uBuffer = planes[1].buffer
+        val vBuffer = planes[2].buffer
+
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+
+        val nv21 = ByteArray(ySize + uSize + vSize)
+
+        yBuffer.get(nv21, 0, ySize)
+        vBuffer.get(nv21, ySize, vSize)
+        uBuffer.get(nv21, ySize + vSize, uSize)
+
+        val yuvImage = YuvImage(
+            nv21,
+            ImageFormat.NV21,
+            width,
+            height,
+            null
+        )
+
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+
+        val imageBytes = out.toByteArray()
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+    }
 }

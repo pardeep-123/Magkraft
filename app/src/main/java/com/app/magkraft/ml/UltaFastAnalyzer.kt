@@ -1,5 +1,4 @@
 package com.app.magkraft.ml
-
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.ImageAnalysis

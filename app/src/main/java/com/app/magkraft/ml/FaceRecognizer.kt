@@ -21,15 +21,6 @@ object FaceRecognizer {
 
     private lateinit var interpreter: Interpreter
 
-//    private val interpreter: Interpreter by lazy {
-//        val context = getAppContext() // See below
-//        val model = loadModelFile(context, MODEL_NAME)
-//        Interpreter(model)
-//    }
-
-    private fun getAppContext(): Context {
-        return MyApp.instance // Singleton reference
-    }
 
     fun initialize(context: Context) {
         if (::interpreter.isInitialized) return

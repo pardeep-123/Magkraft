@@ -10,7 +10,7 @@ data class UserEntity(
     val designation: String,
     val groupName: String,
     val embedding: FloatArray,
-    val image: ByteArray
+//    val image: ByteArray
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -23,7 +23,7 @@ data class UserEntity(
         if (designation != other.designation) return false
         if (groupName != other.groupName) return false
         if (!embedding.contentEquals(other.embedding)) return false
-        if (!image.contentEquals(other.image)) return false
+//        if (!image.contentEquals(other.image)) return false
 
         return true
     }
@@ -34,7 +34,7 @@ data class UserEntity(
         result = 31 * result + designation.hashCode()
         result = 31 * result + groupName.hashCode()
         result = 31 * result + embedding.contentHashCode()
-        result = 31 * result + image.contentHashCode()
+//        result = 31 * result + image.contentHashCode()
         return result
     }
 }

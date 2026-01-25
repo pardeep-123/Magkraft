@@ -17,4 +17,11 @@ object Constants {
     const val getemployees = "getemployees"
     const val updateemployee = "updateemployee"
     const val deleteemployee = "deleteemployee"
+
+
+    const val getemployeesbygroupid = "getemployeesbygroupid"
+    const val addemplog = "addemplog"
+    const val getemplog = "getemplog"
+
+
 }

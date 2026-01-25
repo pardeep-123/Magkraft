@@ -10,7 +10,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.PopupWindow
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.MainActivity
@@ -21,12 +25,14 @@ import com.app.magkraft.ui.adapters.LocationPopupAdapter
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.utils.AuthPref
+import com.app.magkraft.utils.EmployeeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.getValue
 
 class SetLocationFragment : Fragment() {
 
@@ -45,6 +51,9 @@ class SetLocationFragment : Fragment() {
     private lateinit var saveBtn: Button
     var auth: AuthPref? = null
 
+    private val employeeViewModel: EmployeeViewModel by viewModels {
+        ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
+    }
     override fun onAttach(context: Context) {
         super.onAttach(context)
         ctx = context
@@ -96,16 +105,23 @@ class SetLocationFragment : Fragment() {
         saveBtn.setOnClickListener {
             if (groupId.isEmpty() || locationId.isEmpty()) {
 
-                parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, HomeFragment())
-                    .addToBackStack(null)
-                    .commit()
+                (ctx as MainActivity).showToast(ctx!!,"Select Above Fields")
 
             } else {
                 auth?.putLocation("groupId", groupId)
                 auth?.putLocation("locationId", locationId)
                 auth?.putLocation("groupName", etGroup.text.toString())
                 auth?.putLocation("locationName", etLocation.text.toString())
+
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragmentContainer, HomeFragment())
+                    .addToBackStack(null)
+                    .commit()
+
+//                    lifecycleScope.launch(Dispatchers.IO) {
+                        employeeViewModel.syncEmployees()
+
+              //  }
             }
         }
     }

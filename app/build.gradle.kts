@@ -106,4 +106,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
     implementation("androidx.lifecycle:lifecycle-common-java8:2.3.1")
 
+    implementation("androidx.fragment:fragment-ktx:1.7.1")
+
+    implementation("com.google.guava:guava:31.1-android")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

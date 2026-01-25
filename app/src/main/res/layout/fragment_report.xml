@@ -50,6 +50,7 @@
                     android:padding="@dimen/_10sdp"
                     android:drawableEnd="@drawable/ic_arrow_down"
                     android:drawablePadding="8dp"
+                    android:visibility="gone"
                     android:hint="Select Location"
                     android:focusable="false"/>
 
@@ -112,6 +113,7 @@
 <!--                    android:src="@drawable/ic_empty_state"/>-->
 
                 <TextView
+                    android:id="@+id/placeholder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Select filters to view report"
@@ -133,7 +135,9 @@
                 android:id="@+id/rvReport"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="gone"/>
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+
+                android:visibility="visible"/>
 
         </FrameLayout>
 

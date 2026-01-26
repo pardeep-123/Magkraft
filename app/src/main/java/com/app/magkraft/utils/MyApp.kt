@@ -2,6 +2,7 @@ package com.app.magkraft.utils
 
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import com.app.magkraft.ml.FaceRecognizer
 
 // In Application class
 class MyApp : Application() {
@@ -17,6 +18,7 @@ class MyApp : Application() {
         AppCompatDelegate.setDefaultNightMode(
             AppCompatDelegate.MODE_NIGHT_NO
         )
+        FaceRecognizer.initialize(this)
         // Remove FaceRecognizer.initialize() from here
     }
 }

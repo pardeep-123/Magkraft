@@ -28,52 +28,79 @@ class RegisterAnalyzer(
             return
         }
         lastProcessTime = now
+        try {
+            val rotation = imageProxy.imageInfo.rotationDegrees
+            val bitmap = ImageUtils.yuvToBitmap(imageProxy)
+            bitmap?.let { fullBitmap ->
+                val analyzedFace = ImageUtils.getCorrectedBitmap(fullBitmap, rotation, isFrontCamera = true)
+                fullBitmap.recycle()
+                // 🔥 Direct oval crop from analysis frame
+                val faceCrop = cropOvalFromBitmap(analyzedFace)
 
-        val bitmap = ImageUtils.imageProxyToBitmap(imageProxy)
-        bitmap?.let {
-            // 🔥 Direct oval crop from analysis frame
-            val faceCrop = cropOvalFromBitmap(it)
-            it.recycle()
+                // 4. Clean up the corrected full-size frame
+                analyzedFace.recycle()
+
 
             if (faceCrop.width > 100 && faceCrop.height > 100) {
                 onFaceReady(faceCrop)
             } else {
                 faceCrop.recycle()
             }
-        }// Send aligned crop
-        imageProxy.close()
+            }// Send aligned crop
+        }
+        catch (e: Exception) {
+            Log.e("RegisterAnalyzer", "Analysis error: ${e.message}")
+        }
+        finally {
+            imageProxy.close()
+        }
+
     }
+
+//    private fun cropOvalFromBitmap(bitmap: Bitmap): Bitmap {
+//        // ✅ Use ONLY bitmap dimensions - ignore imageProxy!
+//        val bitmapWidth = bitmap.width
+//        val bitmapHeight = bitmap.height
+//
+//        if (bitmapWidth < 100 || bitmapHeight < 100) {
+//            // Return tiny bitmap to avoid processing
+//            return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+//        }
+//
+//        val centerX = bitmapWidth / 2f
+//        val centerY = bitmapHeight / 2f
+//        val ovalWidth = (bitmapWidth * 0.65f).coerceAtMost(bitmapWidth.toFloat())
+//        val ovalHeight = (bitmapHeight * 0.75f).coerceAtMost(bitmapHeight.toFloat())
+//
+//        // ✅ Perfect bounds - IMPOSSIBLE to exceed
+//        val left = ((centerX - ovalWidth / 2f).coerceIn(0f, centerX)).toInt()
+//        val top = ((centerY - ovalHeight / 2f).coerceIn(0f, centerY)).toInt()
+//        val width = (ovalWidth.coerceIn(80f, bitmapWidth.toFloat())).toInt()
+//        val height = (ovalHeight.coerceIn(80f, bitmapHeight.toFloat())).toInt()
+//
+//        // ✅ FINAL SAFETY CHECK
+//        require(left >= 0 && top >= 0 && left + width <= bitmapWidth && top + height <= bitmapHeight) {
+//            "Invalid crop: bitmap=${bitmapWidth}x$bitmapHeight, crop=($left,$top,$width,$height)"
+//        }
+//
+//        return Bitmap.createBitmap(bitmap, left, top, width, height)
+//    }
 
     private fun cropOvalFromBitmap(bitmap: Bitmap): Bitmap {
-        // ✅ Use ONLY bitmap dimensions - ignore imageProxy!
-        val bitmapWidth = bitmap.width
-        val bitmapHeight = bitmap.height
+        // 1. Determine the square size (70% of the shortest side is usually perfect for a face)
+        val minEdge = minOf(bitmap.width, bitmap.height)
+        val size = (minEdge * 0.75f).toInt()
 
-        if (bitmapWidth < 100 || bitmapHeight < 100) {
-            // Return tiny bitmap to avoid processing
-            return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        }
+        // 2. Calculate coordinates to pull from the exact center
+        val left = (bitmap.width - size) / 2
+        val top = (bitmap.height - size) / 2
 
-        val centerX = bitmapWidth / 2f
-        val centerY = bitmapHeight / 2f
-        val ovalWidth = (bitmapWidth * 0.65f).coerceAtMost(bitmapWidth.toFloat())
-        val ovalHeight = (bitmapHeight * 0.75f).coerceAtMost(bitmapHeight.toFloat())
+        // 3. Strict bounds checking to prevent "y + height must be <= bitmap.height" crashes
+        val safeLeft = left.coerceIn(0, bitmap.width - size)
+        val safeTop = top.coerceIn(0, bitmap.height - size)
 
-        // ✅ Perfect bounds - IMPOSSIBLE to exceed
-        val left = ((centerX - ovalWidth / 2f).coerceIn(0f, centerX)).toInt()
-        val top = ((centerY - ovalHeight / 2f).coerceIn(0f, centerY)).toInt()
-        val width = (ovalWidth.coerceIn(80f, bitmapWidth.toFloat())).toInt()
-        val height = (ovalHeight.coerceIn(80f, bitmapHeight.toFloat())).toInt()
-
-        // ✅ FINAL SAFETY CHECK
-        require(left >= 0 && top >= 0 && left + width <= bitmapWidth && top + height <= bitmapHeight) {
-            "Invalid crop: bitmap=${bitmapWidth}x$bitmapHeight, crop=($left,$top,$width,$height)"
-        }
-
-        return Bitmap.createBitmap(bitmap, left, top, width, height)
+        return Bitmap.createBitmap(bitmap, safeLeft, safeTop, size, size)
     }
-
-
 }
 
 /// this is from old perplexcity

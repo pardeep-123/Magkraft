@@ -6,6 +6,7 @@ import com.app.magkraft.data.local.db.UserEntity
 import com.app.magkraft.network.ApiCallInterface
 import com.app.magkraft.network.ApiClient
 import com.app.magkraft.ui.model.EmployeeListModel
+import kotlinx.coroutines.flow.Flow
 
 
 class EmployeeRepository(
@@ -14,10 +15,13 @@ class EmployeeRepository(
     private val authPref: AuthPref
 ) {
 
+    // Expose the Flow directly to the ViewModel
+    fun getEmployeesFlow(): Flow<List<UserEntity>> = dao.getAllUsers()
+
     suspend fun syncEmployees() {
         // 1️⃣ Get groupId from SharedPreferences
         val groupId = authPref.getLocation("groupId")
-      
+
 
         // 2️⃣ Call API
         val response = api.getEmployeesByGroupId(groupId)
@@ -27,8 +31,9 @@ class EmployeeRepository(
                 .filter { it.IsActive && !it.IsDeleted }
                 .map { it.toUserEntity() }
 
-            dao.clearUsers()
-            dao.insertUser(users)   // ✅ list insert
+            dao.updateAllUsers(users)
+//            dao.clearUsers()
+//            dao.insertUser(users)   // ✅ list insert
         }
 
 //        dao.clearUsers()
@@ -45,7 +50,7 @@ class EmployeeRepository(
 
             )
     }
-    suspend fun getEmployees(): List<UserEntity> {
-        return dao.getAllUsers()
-    }
+//    suspend fun getEmployees(): List<UserEntity> {
+//        return dao.getAllUsers()
+//    }
 }

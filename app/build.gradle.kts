@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.gridlayout)
+//    implementation(libs.litert.gpu)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -58,15 +59,29 @@ dependencies {
     implementation ("androidx.camera:camera-view:1.3.1")
 
     // ML Kit Face Detection
-    implementation ("com.google.mlkit:face-detection:16.1.6")
+    implementation ("com.google.mlkit:face-detection:16.1.6"){
+        exclude(group = "com.google.ai.edge.litert")
+    }
 
     // TensorFlow Lite
-    implementation ("org.tensorflow:tensorflow-lite:2.13.0")
-    implementation ("org.tensorflow:tensorflow-lite-support:0.4.4")
-
+//    implementation ("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+   // {
+     //   exclude (group= "com.google.ai.edge.litert")
+    //}
+//    implementation ("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
+    //{
+      //  exclude(group = "com.google.ai.edge.litert")
+   // }
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    //{
+      //  exclude(group = "com.google.ai.edge.litert")
+   // }
+    implementation("org.tensorflow:tensorflow-lite-gpu-api:2.14.0")
     // Room Database
     implementation ("androidx.room:room-runtime:2.6.1")
-    kapt ("androidx.room:room-compiler:2.6.1")
+    ksp ("androidx.room:room-compiler:2.6.1")
     implementation ("androidx.room:room-ktx:2.6.1")
 
     // Lifecycle
@@ -88,19 +103,11 @@ dependencies {
 
     implementation("com.google.android.material:material:1.12.0")
 
-
-    //retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.8.1")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
 //co-routine
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2")
     implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2")
 //ktx
     implementation("androidx.activity:activity-ktx:1.3.1")
-    implementation("androidx.fragment:fragment-ktx:1.3.6")
 // Lifecycle components
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
@@ -111,4 +118,12 @@ dependencies {
     implementation("com.google.guava:guava:31.1-android")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+
+}
+
+configurations.all {
+    exclude(group = "com.google.ai.edge.litert", module = "litert-api")
+    exclude(group = "com.google.ai.edge.litert", module = "litert-runtime")
+    exclude(group = "com.google.ai.edge.litert", module = "litert-gpu-api")
 }

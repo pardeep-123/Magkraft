@@ -50,6 +50,7 @@ import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.utils.AuthPref
 import com.app.magkraft.utils.EmployeeViewModel
+import com.app.magkraft.utils.ImageUtils
 import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -326,14 +327,15 @@ class RegisterActivity : BaseActivity() {
 
     private fun capturePhoto() {
         val previewBitmap = previewView.bitmap ?: return
+        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = true)
         val ovalRect = faceOverlay.getOvalRect()
 
         val faceBitmap = Bitmap.createBitmap(
-            previewBitmap,
-            ovalRect.left.toInt(),
-            ovalRect.top.toInt(),
-            ovalRect.width().toInt(),
-            ovalRect.height().toInt()
+            correctedBitmap,
+            ovalRect.left.toInt().coerceAtLeast(0),
+            ovalRect.top.toInt().coerceAtLeast(0),
+            ovalRect.width().toInt().coerceAtMost(correctedBitmap.width),
+            ovalRect.height().toInt().coerceAtMost(correctedBitmap.height)
         )
 
         // ✅ Safe recycle
@@ -347,7 +349,7 @@ class RegisterActivity : BaseActivity() {
         lifecycleScope.launch {
             val embedding =
                 withContext(Dispatchers.Default) {
-                    FaceRecognizer.getEmbedding(capturedFace!!)
+                    FaceRecognizer.getInstance().getEmbedding(faceBitmap)
                 }
 //                val imageBytes = bitmapToByteArray(capturedFace!!)
             embeddingBase64 =

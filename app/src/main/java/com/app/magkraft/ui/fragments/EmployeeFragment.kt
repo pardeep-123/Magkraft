@@ -41,6 +41,12 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
         super.onAttach(context)
         ctx = context
     }
+
+    override fun onResume() {
+        super.onResume()
+        getEmployeesList()
+
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -49,7 +55,6 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
             }
             insets
         }
-        getEmployeesList()
         adapter = EmployeeAdapter(
             onEdit = {
                 startActivity(

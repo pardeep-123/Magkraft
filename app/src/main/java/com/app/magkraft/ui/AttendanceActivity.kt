@@ -89,7 +89,7 @@ class AttendanceActivity : BaseActivity() {
     private val employeeViewModel: EmployeeViewModel by viewModels()
 
 
-    private val  cameraPermissionLauncher =
+    private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 startCamera()
@@ -103,6 +103,11 @@ class AttendanceActivity : BaseActivity() {
             }
         }
 
+    override fun onStop() {
+        super.onStop()
+        // Reset the flag so that when the user returns, startCamera() can trigger
+        isCameraStarted = false
+    }
 
     override fun onResume() {
         super.onResume()
@@ -254,43 +259,48 @@ class AttendanceActivity : BaseActivity() {
 
     private fun startCamera() {
         // Only proceed if the view is attached and we have permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
 
         previewView.post { //
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+            cameraProviderFuture.addListener({
+                cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder()
-                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-                .build()
-                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+                val preview = Preview.Builder()
+                    .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                    .build()
+                    .also { it.setSurfaceProvider(previewView.surfaceProvider) }
 
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(Size(320, 240)) // Low res = High speed
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-                .build()
+                val imageAnalysis = ImageAnalysis.Builder()
+                    .setTargetResolution(Size(320, 240)) // Low res = High speed
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+                    .build()
 
-            imageAnalysis.setAnalyzer(
-                cameraExecutor, UltraFastAnalyzer(
-                users = users,
-                onMatch = { user -> processFastMatch(user) }
-            ))
+                imageAnalysis.setAnalyzer(
+                    cameraExecutor, UltraFastAnalyzer(
+                        users = users,
+                        onMatch = { user -> processFastMatch(user) }
+                    ))
 
-            try {
-                cameraProvider?.unbindAll()
-                cameraProvider?.bindToLifecycle(
-                    this, CameraSelector.DEFAULT_FRONT_CAMERA, preview, imageAnalysis
-                )
-                isCameraStarted = true
-            } catch (e: Exception) {
-                Log.e("CameraX", "Binding failed", e)
-            }
-        }, ContextCompat.getMainExecutor(this))
+                try {
+                    cameraProvider?.unbindAll()
+                    cameraProvider?.bindToLifecycle(
+                        this, CameraSelector.DEFAULT_FRONT_CAMERA, preview, imageAnalysis
+                    )
+                    isCameraStarted = true
+                } catch (e: Exception) {
+                    Log.e("CameraX", "Binding failed", e)
+                }
+            }, ContextCompat.getMainExecutor(this))
+        }
     }
-}
-//    private fun startCamera() {
+
+    //    private fun startCamera() {
 //
 //        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 //        cameraProviderFuture.addListener({
@@ -338,13 +348,13 @@ class AttendanceActivity : BaseActivity() {
 //            )
 //        }, ContextCompat.getMainExecutor(this))
 //    }
-    private  val ATTENDANCE_COOLDOWN = 5 * 60 * 1000L // 5 minutes
+    private val ATTENDANCE_COOLDOWN = 5 * 60 * 1000L // 5 minutes
     private fun processFastMatch(result: UserEntity) {
         // 3. Prevent multiple scans of the same person (Debounce)
         if (matchShown) return
         matchShown = true
 
-        if(authPref?.getLocation("groupId")!="") {
+        if (authPref?.getLocation("groupId") != "") {
 //            mainScope.launch(Dispatchers.Main) {
 //                markAttendance(result)
 //
@@ -402,14 +412,16 @@ class AttendanceActivity : BaseActivity() {
     }
 
 
-
-
     private fun markAttendance(empId: UserEntity) {
 
         showLoader()
         val now = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
 
-        val call = ApiClient.apiService.markAttendance(empId.empId, authPref?.getLocation("locationId").toString(),now)
+        val call = ApiClient.apiService.markAttendance(
+            empId.empId,
+            authPref?.getLocation("locationId").toString(),
+            now
+        )
 
         call.enqueue(object : Callback<CommonResponse> {
 
@@ -435,7 +447,11 @@ class AttendanceActivity : BaseActivity() {
 //                    }, 3000)
                 } else {
 //                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
-                    Toast.makeText(this@AttendanceActivity, response.body()?.message.toString(), Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        this@AttendanceActivity,
+                        response.body()?.message.toString(),
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                     matchShown = false
                 }
@@ -444,7 +460,8 @@ class AttendanceActivity : BaseActivity() {
             override fun onFailure(call: Call<CommonResponse>, t: Throwable) {
                 hideLoader()
                 matchShown = false
-                Toast.makeText(this@AttendanceActivity, t.localizedMessage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AttendanceActivity, t.localizedMessage, Toast.LENGTH_SHORT)
+                    .show()
             }
         })
     }
@@ -456,9 +473,8 @@ class AttendanceActivity : BaseActivity() {
         }, ms)
     }
 
+
 }
-
-
 
 
 //package com.app.magkraft.ui

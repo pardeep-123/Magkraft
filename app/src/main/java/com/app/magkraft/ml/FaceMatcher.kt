@@ -8,7 +8,7 @@ import kotlin.math.sqrt
 object FaceMatcher {
 
     // ✅ Correct threshold for normalized MobileFaceNet
-    private const val THRESHOLD = 0.55f
+    private const val THRESHOLD = 0.65f
 
     fun findBestMatch(
         currentEmbedding: FloatArray,

@@ -51,14 +51,6 @@ object FaceMatcher {
 
     // In FaceMatcher, add normalization check
     private fun cosineSimilarity(a: FloatArray, b: FloatArray?): Float {
-//        val normA = sqrt(a.sumOf { (it * it).toDouble() }.toFloat())
-//        val normB = sqrt(b.sumOf { (it * it).toDouble() }.toFloat())
-//
-////        if (normA == 0f || normB == 0f) return 0f
-//        var dot = 0f
-//        for (i in a.indices) dot += a[i] * b[i]
-//        return dot// Full cosine
-////        return dot / (normA * normB)  // Full cosine
 
         if (b == null || a.size != b.size) return 0f // Safety check
         var dot = 0f

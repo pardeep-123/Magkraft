@@ -125,7 +125,6 @@ interface ApiCallInterface {
     @POST(Constants.deleteemployee)
     fun deleteEmployee(
         @Field("Id") id: String,
-
         ): Call<CommonResponse>
     @FormUrlEncoded
     @POST(Constants.getemployeesbygroupid)
@@ -138,9 +137,8 @@ interface ApiCallInterface {
     fun markAttendance(
         @Field("EmpID") empId: String,
         @Field("LocationId") locationId: String,
-        @Field("Timestamp") timeStamp: String,
+        @Field("TimeStamp") timeStamp: String,
     ): Call<CommonResponse>
-
 
     @FormUrlEncoded
     @POST(Constants.getemployeesbygroupid)

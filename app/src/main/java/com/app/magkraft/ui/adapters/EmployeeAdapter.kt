@@ -40,7 +40,7 @@ class EmployeeAdapter(
         fun bind(item: EmployeeListModel) {
             itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.Name
             itemView.findViewById<TextView>(R.id.txtEmployeeId).text =
-                "Employee Id: " + item.Code.toString()
+                "Code: " + item.Code
             itemView.findViewById<TextView>(R.id.txtStatus).text =
                 if (item.IsActive) "Active" else "InActive"
             if (item.IsActive)
@@ -48,7 +48,7 @@ class EmployeeAdapter(
                     .setTextColor(ctx.getColor(R.color.green))
             else
                 itemView.findViewById<TextView>(R.id.txtStatus)
-                    .setTextColor(ctx.getColor(R.color.pink_color))
+                    .setTextColor(ctx.getColor(R.color.red_color))
             itemView.findViewById<ImageView>(R.id.btnEdit).setOnClickListener {
                 onEdit(item)
             }

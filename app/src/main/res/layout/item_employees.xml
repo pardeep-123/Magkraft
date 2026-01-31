@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+<!--<com.google.android.material.card.MaterialCardView -->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:layout_marginBottom="10dp"-->
+<!--    app:cardCornerRadius="12dp"-->
+<!--    app:cardElevation="4dp">-->
 
     <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
+        android:gravity="top"
         android:orientation="horizontal"
-        android:padding="14dp">
+        android:padding="5dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -20,28 +20,38 @@
             android:layout_weight="1"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/txtEmployeeName"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:weightSum="1"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/txtEmployeeName"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.8"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:layout_width="0dp"
+                    android:gravity="top"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="3dp"
+                    android:layout_marginTop="1dp"
+                    android:layout_weight="0.2"
+                    android:textSize="13sp"
+                    />
 
+            </LinearLayout>
             <TextView
                 android:id="@+id/txtEmployeeId"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:textSize="13sp" />
-            <TextView
-                android:id="@+id/txtStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:layout_marginTop="10dp"
-                android:text=""
-                android:textSize="13sp"
-                 />
+
+
 
         </LinearLayout>
 
@@ -61,4 +71,4 @@
 
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+<!--</com.google.android.material.card.MaterialCardView>-->

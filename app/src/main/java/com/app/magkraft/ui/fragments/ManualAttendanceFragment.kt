@@ -2,10 +2,12 @@ package com.app.magkraft.ui.fragments
 
 import android.app.DatePickerDialog
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -16,52 +18,56 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.MainActivity
 import com.app.magkraft.R
+import com.app.magkraft.data.local.db.UserEntity
+import com.app.magkraft.model.CommonResponse
 import com.app.magkraft.network.ApiClient
+import com.app.magkraft.ui.RegisterActivity
+import com.app.magkraft.ui.adapters.EmployeeAdapter
 import com.app.magkraft.ui.adapters.EmployeePopupAdapter
 import com.app.magkraft.ui.adapters.GroupPopupAdapter
+import com.app.magkraft.ui.adapters.LocationPopupAdapter
 import com.app.magkraft.ui.adapters.ViewReportsAdapter
 import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
+import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.ui.model.ViewReportsModelItem
 import com.app.magkraft.utils.AuthPref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
-class ReportFragment : Fragment(R.layout.fragment_report) {
+class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
 
     lateinit var etGroup: EditText
-    lateinit var etLocation: EditText
     lateinit var etEmployee: EditText
-    lateinit var etMonth: EditText
-    lateinit var placeholder: TextView
-    lateinit var btnViewReport: Button
-    lateinit var layoutEmpty: LinearLayout
-    lateinit var progressBar: ProgressBar
-    lateinit var rvReport: RecyclerView
+    lateinit var etLocation: EditText
+//    lateinit var placeholder: TextView
+    lateinit var btnSave: Button
+//    lateinit var progressBar: ProgressBar
 
     private var groupList = ArrayList<GroupListModel>()
     private var employeeList = ArrayList<EmployeeListModel>()
-    private var employeeReportsList = ArrayList<ViewReportsModelItem>()
     private var ctx: Context? = null
 
     private var groupId = ""
     private var employeeId = ""
-    private var month = ""
-    private var year = ""
-    private lateinit var adapter: ViewReportsAdapter
+    private var locationId = ""
+
+    private var locationList = ArrayList<LocationListModel>()
 
     var authPref: AuthPref ?=null
-
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -71,29 +77,11 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         etGroup = view.findViewById(R.id.etGroup)
-        etLocation = view.findViewById(R.id.etLocation)
         etEmployee = view.findViewById(R.id.etEmployee)
-        etMonth = view.findViewById(R.id.etMonth)
-        btnViewReport = view.findViewById(R.id.btnViewReport)
-        layoutEmpty = view.findViewById(R.id.layoutEmpty)
-        progressBar = view.findViewById(R.id.progressBar)
-        rvReport = view.findViewById(R.id.rvReport)
-        placeholder = view.findViewById(R.id.placeholder)
+        etLocation = view.findViewById(R.id.etLocation)
+        btnSave = view.findViewById(R.id.btnSave)
         authPref = AuthPref(ctx!!)
         getGroups()
-
-        adapter = ViewReportsAdapter()
-
-        rvReport.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@ReportFragment.adapter
-        }
-
-        etMonth.setOnClickListener {
-            showMonthYearPicker(requireContext()) {
-                etMonth.setText(it)
-            }
-        }
 
         etGroup.setOnClickListener {
             showGroupPopup(etGroup, groupList) {
@@ -102,85 +90,55 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                 groupId = it.Id.toString()
 
                 CoroutineScope(Dispatchers.Main).launch {
-                    getEmployeeList()
+                    getLocationList(it.Id)
+                }
+            }
+        }
+
+        etLocation.setOnClickListener {
+            if (groupId.isEmpty()) {
+                Toast.makeText(ctx, "Select group First", Toast.LENGTH_SHORT).show()
+
+            } else {
+                showLocationPopup(etLocation, locationList) {
+
+                    etLocation.setText(it.Name)
+                    locationId = it.Id.toString()
+
+                    CoroutineScope(Dispatchers.Main).launch {
+                        getEmployeeList()
+                    }
                 }
             }
         }
 
         etEmployee.setOnClickListener {
             showEmployeePopup(etEmployee, employeeList) {
+
                 etEmployee.setText(it.Name)
                 employeeId = it.Id.toString()
 
             }
         }
 
-        btnViewReport.setOnClickListener {
+        btnSave.setOnClickListener {
 
             if (etGroup.text.isNullOrEmpty() ||
-//                etLocation.text.isNullOrEmpty() ||
                 etEmployee.text.isNullOrEmpty() ||
-                etMonth.text.isNullOrEmpty()
+                etLocation.text.isNullOrEmpty()
             ) {
 
                 Toast.makeText(
                     requireContext(),
-                    "Please select all filters",
+                    "Please select all fields",
                     Toast.LENGTH_SHORT
                 ).show()
                 return@setOnClickListener
             }else{
-                getEmployeesReports()
+                markAttendance()
             }
-
-                    }
-    }
-
-    fun showMonthYearPicker(
-        context: Context,
-        onSelected: (String) -> Unit
-    ) {
-        val calendar = Calendar.getInstance()
-
-        val dialog = DatePickerDialog(
-            context,
-            { _, year, month, _ ->
-                this.month = (month + 1).toString()
-                this.year = year.toString()
-
-                val cal = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, year)
-                    set(Calendar.MONTH, month)
-                    set(Calendar.DAY_OF_MONTH, 1) // important
-                }
-
-                val monthName = SimpleDateFormat(
-                    "MMMM",
-                    Locale.getDefault()
-                ).format(
-                    cal.time
-                )
-
-                onSelected("$monthName $year")
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-
-        // ✅ Hide day picker safely
-        try {
-            val daySpinnerId =
-                Resources.getSystem().getIdentifier("day", "id", "android")
-            dialog.datePicker.findViewById<View>(daySpinnerId)?.visibility =
-                View.GONE
-        } catch (_: Exception) {
-            // ignore (some devices)
         }
-
-        dialog.show()
     }
-
 
     private fun showGroupPopup(
         anchor: View, groups: List<GroupListModel>, onSelect: (GroupListModel) -> Unit
@@ -259,6 +217,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                 if (response.isSuccessful && response.body() != null) {
                     groupList.clear()
                     groupList.addAll(response.body()!!)
+
                     /**
                      * Here we need to check , if group id is not 0 with user type 2, then
                      * set group id to that
@@ -269,7 +228,8 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                             etGroup.setText(groupList.firstOrNull{it.Id.toString()==groupId}?.Name?:"")
                             etGroup.isEnabled = false
 
-                            getEmployeeList()
+                            getLocationList(groupId.toInt())
+
                         }
                     }
                 } else {
@@ -318,39 +278,116 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         })
     }
 
-    private fun getEmployeesReports() {
+    private fun getLocationList(groupId: Int) {
 
         (ctx as MainActivity).showLoader()
 
-        val call = ApiClient.apiService.viewReports(employeeId,month,year)
+        val call = ApiClient.apiService.getLocations()
 
-        call.enqueue(object : Callback<List<ViewReportsModelItem>> {
+        call.enqueue(object : Callback<List<LocationListModel>> {
 
             override fun onResponse(
-                call: Call<List<ViewReportsModelItem>>,
-                response: Response<List<ViewReportsModelItem>>
+                call: Call<List<LocationListModel>>,
+                response: Response<List<LocationListModel>>
             ) {
-                (ctx as MainActivity).hideLoader()
+                (ctx as MainActivity). hideLoader()
 
                 if (response.isSuccessful && response.body() != null) {
-                    employeeReportsList.clear()
-                    employeeReportsList.addAll(response.body()!!)
-                    employeeReportsList.reverse()
-                    adapter.submitList(employeeReportsList)
-                    placeholder.visibility = View.GONE
+                    locationList.clear()
+
+                    locationList.addAll(response.body()!!.filter { it.GroupId == groupId })
+
+
                 } else {
-                    placeholder.visibility = View.VISIBLE
 //                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
 //                    Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
 
-            override fun onFailure(call: Call<List<ViewReportsModelItem>>, t: Throwable) {
-                (ctx as MainActivity).hideLoader()
-                placeholder.visibility = View.VISIBLE
+            override fun onFailure(call: Call<List<LocationListModel>>, t: Throwable) {
+                (ctx as MainActivity). hideLoader()
                 Toast.makeText(ctx, t.localizedMessage, Toast.LENGTH_SHORT).show()
             }
         })
     }
 
+    private fun showLocationPopup(
+        anchor: View,
+        locations: List<LocationListModel>,
+        onSelect: (LocationListModel) -> Unit
+    ) {
+        val view = layoutInflater.inflate(R.layout.popup_location_list, null)
+        val popup = PopupWindow(
+            view,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        val etSearch = view.findViewById<EditText>(R.id.etSearch)
+        val rvLocations = view.findViewById<RecyclerView>(R.id.rvLocations)
+
+        val adapter = LocationPopupAdapter(locations.toMutableList()) {
+            onSelect(it)
+            popup.dismiss()
+        }
+
+        rvLocations.layoutManager = LinearLayoutManager(ctx)
+        rvLocations.adapter = adapter
+
+        popup.elevation = 12f
+        popup.showAsDropDown(anchor)
+    }
+
+
+    private fun markAttendance() {
+
+        (ctx as MainActivity). showLoader()
+        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+        val call = ApiClient.apiService.markAttendance(
+            employeeId,
+            locationId,
+            now
+        )
+
+        call.enqueue(object : Callback<CommonResponse> {
+
+            override fun onResponse(
+                call: Call<CommonResponse>,
+                response: Response<CommonResponse>
+            ) {
+                (ctx as MainActivity). hideLoader()
+
+                if (response.isSuccessful && response.body() != null) {
+                    Toast.makeText(
+                        ctx,
+                        "Attendance Marked Successfully",
+                        Toast.LENGTH_SHORT).show()
+
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragmentContainer, HomeFragment())
+                        .addToBackStack(null)
+                        .commit()
+
+                } else {
+//                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
+                    Toast.makeText(
+                        ctx,
+                        response.body()?.message.toString(),
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+
+                }
+            }
+
+            override fun onFailure(call: Call<CommonResponse>, t: Throwable) {
+                (ctx as MainActivity).hideLoader()
+
+                Toast.makeText(ctx, t.localizedMessage, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        })
+    }
 }

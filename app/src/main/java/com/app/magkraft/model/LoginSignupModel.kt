@@ -13,6 +13,7 @@ data class LoginSignupModel(
         val IsDeleted: Boolean,
         val Password: String,
         val UserName: String,
-        val UserType: Int
+        val UserType: Int,
+        val GroupId: Int
     )
 }

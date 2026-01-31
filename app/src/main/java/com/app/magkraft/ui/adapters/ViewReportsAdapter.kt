@@ -37,8 +37,8 @@ class ViewReportsAdapter() : RecyclerView.Adapter<ViewReportsAdapter.GroupVH>() 
     inner class GroupVH(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(item: ViewReportsModelItem) {
             itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.Name
-            itemView.findViewById<TextView>(R.id.txtEmployeeId).text = "Employee Id: " + item.Code
-            itemView.findViewById<TextView>(R.id.groupId).text = "Location Id: " + item.LocationId
+            itemView.findViewById<TextView>(R.id.txtEmployeeId).text = "Code: " + item.Code
+//            itemView.findViewById<TextView>(R.id.groupId).text = "Location Id: " + item.LocationId
             itemView.findViewById<TextView>(R.id.timeStamp).text = "Time: " + item.TimeStamp
 
 

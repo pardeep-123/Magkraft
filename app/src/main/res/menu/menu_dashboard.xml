@@ -16,6 +16,8 @@
     <item android:id="@+id/menu_report"
         android:title="View Reports" />
 
+    <item android:id="@+id/mark_attendance"
+        android:title="Manual Attendance" />
 
     <item android:id="@+id/menu_logout"
         android:title="Logout" />

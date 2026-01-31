@@ -6,9 +6,11 @@
     <color name="light_gray">#6B6767</color>
     <color name="hint_gray">#74858484</color>
     <color name="dark_gray">#3E3D3D</color>
-    <color name="purple_color">#361a3b</color>
-    <color name="mid_color">#681d3b</color>
-    <color name="pink_color">#b01837</color>
+    <color name="purple_color">#FFC436</color>
+    <color name="mid_color">#FFC436</color>
+    <color name="pink_color">#FFC436</color>
+    <color name="red_color">#FF0000</color>
     <color name="green">#4CAF50</color>
+    <color name="dark">#0F172A</color>
 
 </resources>

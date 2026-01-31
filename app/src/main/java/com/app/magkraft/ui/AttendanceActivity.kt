@@ -300,54 +300,7 @@ class AttendanceActivity : BaseActivity() {
         }
     }
 
-    //    private fun startCamera() {
-//
-//        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-//        cameraProviderFuture.addListener({
-//            val provider = cameraProviderFuture.get()
-//            cameraProvider = provider  // Store reference
-//
-//            // ✅ Prevent double binding
-//            provider.unbindAll()
-//            previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
-//
-//            val preview = Preview.Builder()
-//                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-//                .build()
-//                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
-//
-//            imageAnalysis = ImageAnalysis.Builder()
-////                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-//                .setTargetResolution(Size(320, 240))  // Smaller = faster
-//                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-//                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-////                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-//
-//                .setImageQueueDepth(1)
-//                .build()
-//            //  CoroutineScope(Dispatchers.IO).launch {
-////                val users = AppDatabase.getDatabase(this@AttendanceActivity)
-////                    .userDao()
-////                    .getAllUsers()
-//
-//            // 🔥 ULTRAFAST - No ML Kit!
-//            imageAnalysis.setAnalyzer(
-//                cameraExecutor, UltraFastAnalyzer(
-//                    users = users,  // Load once
-//                    onMatch = { user ->
-//                        processFastMatch(user)  // Simplified
-//                    }
-//                ))
-//            //   }
-////            cameraProvider?.unbindAll()
-//            cameraProvider?.bindToLifecycle(
-//                this,
-//                CameraSelector.DEFAULT_FRONT_CAMERA,
-//                preview,
-//                imageAnalysis
-//            )
-//        }, ContextCompat.getMainExecutor(this))
-//    }
+
     private val ATTENDANCE_COOLDOWN = 5 * 60 * 1000L // 5 minutes
     private fun processFastMatch(result: UserEntity) {
         // 3. Prevent multiple scans of the same person (Debounce)
@@ -415,7 +368,7 @@ class AttendanceActivity : BaseActivity() {
     private fun markAttendance(empId: UserEntity) {
 
         showLoader()
-        val now = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+        val now = SimpleDateFormat("yyyy-dd-MM HH:mm:ss", Locale.getDefault()).format(Date())
 
         val call = ApiClient.apiService.markAttendance(
             empId.empId,

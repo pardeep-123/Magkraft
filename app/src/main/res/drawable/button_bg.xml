@@ -7,7 +7,7 @@
         android:endColor="@color/pink_color"
         android:angle="180"
         android:type="linear" />
-    <corners android:radius="@dimen/_15sdp"/>
+    <corners android:radius="@dimen/_10sdp"/>
 
 
 </shape>

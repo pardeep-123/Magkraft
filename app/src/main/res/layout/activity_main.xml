@@ -11,7 +11,7 @@
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/mid_color"
+        android:background="@color/dark"
         app:liftOnScroll="false"
         android:fitsSystemWindows="true">
 
@@ -30,9 +30,10 @@
                 android:gravity="center_vertical">
 
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@drawable/ic_launcher_foreground"/>
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@mipmap/ic_launcher"
+                    />
 
                 <TextView
                     android:id="@+id/toolBartext"

@@ -11,20 +11,24 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- 🔹 FILTER CARD -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white"
-            android:padding="12dp">
+
 
             <LinearLayout
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
+                android:weightSum="3"
+
                 android:layout_height="wrap_content">
 
+                <!-- 🔹 FILTER CARD -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/white"
+                    android:padding="12dp">
                 <!-- Group -->
                 <EditText
                     android:id="@+id/etGroup"
@@ -36,8 +40,11 @@
                     android:padding="@dimen/_10sdp"
                     android:drawableEnd="@drawable/ic_arrow_down"
                     android:drawablePadding="8dp"
-                    android:hint="Select Group"
+                    android:hint="Group"
+                    android:textSize="@dimen/_12ssp"
                     android:focusable="false"/>
+
+                </com.google.android.material.card.MaterialCardView>
 
                 <!-- Location -->
                 <EditText
@@ -53,8 +60,15 @@
                     android:visibility="gone"
                     android:hint="Select Location"
                     android:focusable="false"/>
-
                 <!-- Employee -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/white"
+                    android:padding="12dp">
                 <EditText
                     android:id="@+id/etEmployee"
                     android:layout_width="match_parent"
@@ -64,11 +78,20 @@
                     android:cursorVisible="false"
                     android:padding="@dimen/_10sdp"
                     android:drawableEnd="@drawable/ic_arrow_down"
-                    android:drawablePadding="8dp"
-                    android:hint="Select Employee"
+                    android:drawablePadding="5dp"
+                    android:textSize="@dimen/_12ssp"
+                    android:hint="Employee"
                     android:focusable="false"/>
-
+                </com.google.android.material.card.MaterialCardView>
                 <!-- Month -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    android:layout_weight="1"
+                    app:cardBackgroundColor="@color/white"
+                    android:padding="12dp">
                 <EditText
                     android:id="@+id/etMonth"
                     android:layout_width="match_parent"
@@ -79,18 +102,20 @@
                     android:padding="@dimen/_10sdp"
                     android:drawableEnd="@drawable/ic_arrow_down"
                     android:drawablePadding="8dp"
-                    android:hint="Select Month"
+                    android:hint="Month"
+                    android:textSize="@dimen/_12ssp"
                     android:focusable="false"/>
-
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
                 <Button
                     android:id="@+id/btnViewReport"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:text="View Report"
+                    android:textColor="@color/dark"
                     android:layout_marginTop="12dp"/>
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+
 
         <!-- 🔹 CONTENT AREA -->
         <FrameLayout

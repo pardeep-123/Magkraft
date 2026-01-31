@@ -3,6 +3,7 @@ package com.app.magkraft.ui
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -74,7 +75,7 @@ class RegisterActivity : BaseActivity() {
     private lateinit var etName: EditText
     private lateinit var etEmpId: EditText
     private lateinit var etGroup: EditText
-    private lateinit var etLocation: EditText
+//    private lateinit var etLocation: EditText
     private lateinit var etDesignation: EditText
     private lateinit var ivFace: ImageView
     private var isImageCaptured = false
@@ -140,19 +141,6 @@ class RegisterActivity : BaseActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun setStatusBarColor(window: Window, statusBarBgView: View) {
-        statusBarBgView.setBackgroundResource(R.drawable.maroon_black_gradient_bg)
-        ViewCompat.setOnApplyWindowInsetsListener(statusBarBgView) { view, insets ->
-            val systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.updateLayoutParams {
-                height = systemBarsInsets.top
-            }
-            val insetsController = WindowCompat.getInsetsController(window, window.decorView)
-            insetsController.isAppearanceLightStatusBars = false
-            WindowInsetsCompat.CONSUMED
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
@@ -163,7 +151,7 @@ class RegisterActivity : BaseActivity() {
         etName = findViewById(R.id.etName)
         etEmpId = findViewById(R.id.etEmployeeId)
         etGroup = findViewById(R.id.etGroup)
-        etLocation = findViewById(R.id.etLocation)
+//        etLocation = findViewById(R.id.etLocation)
         etDesignation = findViewById(R.id.etDesignation)
         ivFace = findViewById(R.id.ivFace)
         previewContainer = findViewById(R.id.previewContainer)
@@ -178,10 +166,10 @@ class RegisterActivity : BaseActivity() {
         employeeData?.let {
             etName.setText(it.Name)
             etDesignation.setText(it.Designation)
-            etEmpId.setText(it.Code.toString())
+            etEmpId.setText(it.Code)
             findViewById<SwitchMaterial>(R.id.switchActive).isChecked = it.IsActive
             etGroup.setText(it.GroupName)
-            etLocation.setText(it.LocationName)
+//            etLocation.setText(it.LocationName)
             groupId = it.GroupId.toString()
             locationId = it.LocationId.toString()
             embeddingBase64 = it.Photo
@@ -189,7 +177,6 @@ class RegisterActivity : BaseActivity() {
 
         }
 
-//        statusBarBackgroundView = findViewById(R.id.status_bar_background_view)
         userDao = AppDatabase.getDatabase(this).userDao()
 // ✅ Initialize executor
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -198,6 +185,10 @@ class RegisterActivity : BaseActivity() {
             startCamera()
         }
 
+        ivFace.setOnClickListener {
+            previewContainer.visibility = View.VISIBLE
+            startCamera()
+        }
         btnSave.setOnClickListener {
             saveUserAndStartScan()
         }
@@ -212,30 +203,31 @@ class RegisterActivity : BaseActivity() {
 
 //            setStatusBarColor(window, statusBarBackgroundView)
         }
+
         etGroup.setOnClickListener {
             showGroupPopup(etGroup, groupList) {
 
                 etGroup.setText(it.Name)
                 groupId = it.Id.toString()
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    getLocationList(groupId.toInt())
-                }
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    getLocationList(groupId.toInt())
+//                }
             }
         }
 
-        etLocation.setOnClickListener {
-            if (groupId.isEmpty()) {
-                Toast.makeText(this, "Select group First", Toast.LENGTH_SHORT).show()
-
-            } else {
-                showLocationPopup(etLocation, locationList) {
-
-                    etLocation.setText(it.Name)
-                    locationId = it.Id.toString()
-                }
-            }
-        }
+//        etLocation.setOnClickListener {
+//            if (groupId.isEmpty()) {
+//                Toast.makeText(this, "Select group First", Toast.LENGTH_SHORT).show()
+//
+//            } else {
+//                showLocationPopup(etLocation, locationList) {
+//
+//                    etLocation.setText(it.Name)
+//                    locationId = it.Id.toString()
+//                }
+//            }
+//        }
 
         CoroutineScope(Dispatchers.Main).launch {
             getGroups()
@@ -317,12 +309,6 @@ class RegisterActivity : BaseActivity() {
           //  }
 
         }
-    }
-
-    private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
-        return stream.toByteArray()
     }
 
     private fun capturePhoto() {
@@ -447,7 +433,6 @@ class RegisterActivity : BaseActivity() {
 
     private fun getGroups() {
 
-//        (ctx as MainActivity).showLoader()
 
         val call = ApiClient.apiService.getGroups()
 
@@ -457,13 +442,22 @@ class RegisterActivity : BaseActivity() {
                 call: Call<List<GroupListModel>>,
                 response: Response<List<GroupListModel>>
             ) {
-//                (ctx as MainActivity).hideLoader()
 
                 if (response.isSuccessful && response.body() != null) {
                     groupList.clear()
                     groupList.addAll(response.body()!!)
 //                    adapter.submitList(groupList)
-
+                    /**
+                     * Here we need to check , if group id is not 0 with user type 2, then
+                     * set group id to that
+                     */
+                    if(authPref?.get("userType")=="2"){
+                        if(authPref?.get("groupId")!="0"){
+                            groupId = authPref?.get("groupId").toString()
+                            etGroup.setText(groupList.firstOrNull{it.Id.toString()==groupId}?.Name?:"")
+                            etGroup.isEnabled = false
+                        }
+                    }
                 } else {
 //                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
 //                    Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show()
@@ -476,39 +470,39 @@ class RegisterActivity : BaseActivity() {
             }
         })
     }
-
-    private fun getLocationList(groupId: Int) {
-
-        showLoader()
-
-        val call = ApiClient.apiService.getLocations()
-
-        call.enqueue(object : Callback<List<LocationListModel>> {
-
-            override fun onResponse(
-                call: Call<List<LocationListModel>>,
-                response: Response<List<LocationListModel>>
-            ) {
-                hideLoader()
-
-                if (response.isSuccessful && response.body() != null) {
-                    locationList.clear()
-
-                    locationList.addAll(response.body()!!.filter { it.GroupId == groupId })
-
-
-                } else {
-//                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
-//                    Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onFailure(call: Call<List<LocationListModel>>, t: Throwable) {
-                hideLoader()
-                Toast.makeText(this@RegisterActivity, t.localizedMessage, Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
+//
+//    private fun getLocationList(groupId: Int) {
+//
+//        showLoader()
+//
+//        val call = ApiClient.apiService.getLocations()
+//
+//        call.enqueue(object : Callback<List<LocationListModel>> {
+//
+//            override fun onResponse(
+//                call: Call<List<LocationListModel>>,
+//                response: Response<List<LocationListModel>>
+//            ) {
+//                hideLoader()
+//
+//                if (response.isSuccessful && response.body() != null) {
+//                    locationList.clear()
+//
+//                    locationList.addAll(response.body()!!.filter { it.GroupId == groupId })
+//
+//
+//                } else {
+////                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
+////                    Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<List<LocationListModel>>, t: Throwable) {
+//                hideLoader()
+//                Toast.makeText(this@RegisterActivity, t.localizedMessage, Toast.LENGTH_SHORT).show()
+//            }
+//        })
+//    }
 
     private fun showGroupPopup(
         anchor: View,
@@ -545,40 +539,41 @@ class RegisterActivity : BaseActivity() {
         popup.showAsDropDown(anchor)
     }
 
-    private fun showLocationPopup(
-        anchor: View,
-        locations: List<LocationListModel>,
-        onSelect: (LocationListModel) -> Unit
-    ) {
-        val view = layoutInflater.inflate(R.layout.popup_location_list, null)
-        val popup = PopupWindow(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        )
+//    private fun showLocationPopup(
+//        anchor: View,
+//        locations: List<LocationListModel>,
+//        onSelect: (LocationListModel) -> Unit
+//    ) {
+//        val view = layoutInflater.inflate(R.layout.popup_location_list, null)
+//        val popup = PopupWindow(
+//            view,
+//            ViewGroup.LayoutParams.MATCH_PARENT,
+//            ViewGroup.LayoutParams.WRAP_CONTENT,
+//            true
+//        )
+//
+//        val etSearch = view.findViewById<EditText>(R.id.etSearch)
+//        val rvLocations = view.findViewById<RecyclerView>(R.id.rvLocations)
+//
+//        val adapter = LocationPopupAdapter(locations.toMutableList()) {
+//            onSelect(it)
+//            popup.dismiss()
+//        }
+//
+//        rvLocations.layoutManager = LinearLayoutManager(this)
+//        rvLocations.adapter = adapter
+//
+//        etSearch.addTextChangedListener { it ->
+////            val filtered = groups.filter { g ->
+////                g.name.contains(it.toString(), true)
+////            }
+////            adapter.update(filtered)
+//        }
+//
+//        popup.elevation = 12f
+//        popup.showAsDropDown(anchor)
+//    }
 
-        val etSearch = view.findViewById<EditText>(R.id.etSearch)
-        val rvLocations = view.findViewById<RecyclerView>(R.id.rvLocations)
-
-        val adapter = LocationPopupAdapter(locations.toMutableList()) {
-            onSelect(it)
-            popup.dismiss()
-        }
-
-        rvLocations.layoutManager = LinearLayoutManager(this)
-        rvLocations.adapter = adapter
-
-        etSearch.addTextChangedListener { it ->
-//            val filtered = groups.filter { g ->
-//                g.name.contains(it.toString(), true)
-//            }
-//            adapter.update(filtered)
-        }
-
-        popup.elevation = 12f
-        popup.showAsDropDown(anchor)
-    }
 
 
 

@@ -26,13 +26,14 @@ import com.app.magkraft.ui.fragments.EmployeeFragment
 import com.app.magkraft.ui.fragments.GroupFragment
 import com.app.magkraft.ui.fragments.HomeFragment
 import com.app.magkraft.ui.fragments.LocationFragment
+import com.app.magkraft.ui.fragments.ManualAttendanceFragment
 import com.app.magkraft.ui.fragments.ReportFragment
 import com.app.magkraft.ui.fragments.SetLocationFragment
 import com.app.magkraft.utils.AuthPref
 import com.google.android.material.appbar.MaterialToolbar
 
 class MainActivity : AppCompatActivity() {
-    var authPref: AuthPref ?=null
+    var authPref: AuthPref? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,8 +57,8 @@ class MainActivity : AppCompatActivity() {
         // Default screen
 
         loadHomeFragment()
-        onBackPressedDispatcher.addCallback(this,object :
-            OnBackPressedCallback(true){
+        onBackPressedDispatcher.addCallback(this, object :
+            OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
                 val fm = supportFragmentManager
@@ -78,21 +79,26 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-       if(authPref?.get("userType")=="1") {
-           menuInflater.inflate(R.menu.menu_dashboard, menu)
-       }else{
-           menuInflater.inflate(R.menu.menu_dashboard_user, menu)
-       }
+        if (authPref?.get("userType") == "1") {
+            menuInflater.inflate(R.menu.menu_dashboard, menu)
+        } else if (authPref?.get("userType") == "2") {
+            menuInflater.inflate(R.menu.menu_dashboard_user, menu)
+        }
+
+        else {
+            menuInflater.inflate(R.menu.menu_supervisor, menu)
+        }
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_group -> loadFragment(GroupFragment(),"GROUP")
-            R.id.menu_location -> loadFragment(LocationFragment(),"Location")
-            R.id.menu_set_location -> loadFragment(SetLocationFragment(),"SetLocation")
-            R.id.menu_employee -> loadFragment(EmployeeFragment(),"Employee")
-            R.id.menu_report -> loadFragment(ReportFragment(),"Reports")
+            R.id.menu_group -> loadFragment(GroupFragment(), "GROUP")
+            R.id.menu_location -> loadFragment(LocationFragment(), "Location")
+            R.id.menu_set_location -> loadFragment(SetLocationFragment(), "SetLocation")
+            R.id.menu_employee -> loadFragment(EmployeeFragment(), "Employee")
+            R.id.menu_report -> loadFragment(ReportFragment(), "Reports")
+            R.id.mark_attendance -> loadFragment(ManualAttendanceFragment(), "Manual Attendance")
             R.id.menu_logout -> showLogoutDialog(this)
         }
         return true
@@ -103,6 +109,7 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.fragmentContainer, HomeFragment(), "HOME")
             .commit()
     }
+
     private fun loadFragment(fragment: Fragment, tag: String) {
 
         val currentFragment =
@@ -112,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         if (currentFragment?.tag == tag) return
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, fragment,tag)
+            .replace(R.id.fragmentContainer, fragment, tag)
             .addToBackStack(tag)
             .commit()
     }
@@ -139,10 +146,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showToast(ctx: Context, msg:String){
+    fun showToast(ctx: Context, msg: String) {
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
 
     }
+
     fun showLogoutDialog(
         context: Context
     ) {
@@ -154,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 dialog.dismiss()
                 // Clear token & user data
                 authPref?.logout()
-               finish()
+                finish()
                 // Navigate to Login
 //                val intent = Intent(this, AttendanceActivity::class.java)
 //                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

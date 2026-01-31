@@ -78,12 +78,12 @@ class LoginActivity : BaseActivity() {
                         authPref?.saveToken(response.body()?.token.toString())
                         authPref?.put("userType", response.body()?.data?.UserType.toString())
                         authPref?.put("fullName", response.body()?.data?.FullName.toString())
-                        Toast.makeText(this@LoginActivity, "Login Success", Toast.LENGTH_SHORT)
-                            .show()
+                        authPref?.put("groupId", response.body()?.data?.GroupId.toString())
+
                         startActivity(
                             Intent(this@LoginActivity, MainActivity::class.java)
                         )
-finish()
+                        finish()
                     } else {
                         Toast.makeText(
                             this@LoginActivity,

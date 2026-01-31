@@ -1,0 +1,99 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+
+    android:padding="16dp">
+
+    <TextView
+        android:text="Filter Employees"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/groupCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:cardBackgroundColor="@color/white"
+        android:layout_margin="@dimen/_15sdp"
+        android:padding="1dp">
+        <!-- Group -->
+        <AutoCompleteTextView
+            android:id="@+id/etGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_1sdp"
+            android:background="@null"
+            android:cursorVisible="false"
+            android:padding="@dimen/_10sdp"
+            android:drawableEnd="@drawable/ic_arrow_down"
+            android:drawablePadding="8dp"
+            android:hint="Group"
+            android:textSize="@dimen/_12ssp"
+            android:focusable="false"/>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/statusCardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        android:layout_weight="1"
+        app:layout_constraintTop_toBottomOf="@id/groupCardView"
+        app:cardBackgroundColor="@color/white"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:padding="12dp">
+        <!-- Group -->
+        <AutoCompleteTextView
+            android:id="@+id/etStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_1sdp"
+            android:background="@null"
+            android:cursorVisible="false"
+            android:padding="@dimen/_10sdp"
+            android:drawableEnd="@drawable/ic_arrow_down"
+            android:drawablePadding="8dp"
+            android:hint="Status"
+            android:textSize="@dimen/_12ssp"
+            android:focusable="false"/>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        >
+    <Button
+        android:id="@+id/btnApply"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Apply"
+        android:layout_weight="1"
+        android:textColor="@color/dark"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="16dp"/>
+
+    <Button
+        android:id="@+id/btnClear"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:textColor="@color/dark"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="@dimen/_15sdp"
+        android:text="Clear"/>
+    </LinearLayout>
+</LinearLayout>

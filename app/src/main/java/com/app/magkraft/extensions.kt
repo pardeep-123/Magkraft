@@ -28,6 +28,4 @@ fun base64ToFloatArray(base64: String): FloatArray {
         return floatArrayOf()
     }
 }
-fun base64ToByteArray(base64: String): ByteArray {
-    return Base64.decode(base64, Base64.NO_WRAP)
-}
+

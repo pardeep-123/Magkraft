@@ -73,6 +73,12 @@ class SetLocationFragment : Fragment() {
         etLocation = view.findViewById(R.id.etLocation)
         saveBtn = view.findViewById(R.id.btnSave)
         auth = AuthPref(ctx!!)
+
+        if(auth?.getLocation("groupName")!=""){
+            etGroup.setText(auth?.getLocation("groupName"))
+            etLocation.setText(auth?.getLocation("locationName"))
+
+        }
         etLocation.setOnClickListener {
             if (groupId.isEmpty()) {
                 Toast.makeText(ctx, "Select group First", Toast.LENGTH_SHORT).show()

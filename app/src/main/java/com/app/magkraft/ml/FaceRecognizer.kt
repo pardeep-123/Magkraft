@@ -111,9 +111,18 @@ class FaceRecognizer private constructor() {
         // 5. TFLite inference using the pre-allocated outputBuffer
         interpreter?.run(inputBuffer, outputBuffer)
 
+        /**
+         * added a new line without oval shape
+         */
+        // IMPORTANT: Return a copy so the analyzer can process it
+        // without it being overwritten by the next frame immediately.
+        val result = FloatArray(EMBEDDING_SIZE)
+        System.arraycopy(outputBuffer[0], 0, result, 0, EMBEDDING_SIZE)
+
         // 6. Return a normalized COPY of the results
         // We use .clone() so the returned data doesn't change when the next frame runs
-        return l2Normalize(outputBuffer[0].clone())
+//        return l2Normalize(outputBuffer[0].clone())
+        return l2Normalize(result)
     }
 
     private fun preprocessImage(bitmap: Bitmap) {

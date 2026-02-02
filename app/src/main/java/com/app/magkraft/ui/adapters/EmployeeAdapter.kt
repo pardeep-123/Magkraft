@@ -40,7 +40,7 @@ class EmployeeAdapter(
         fun bind(item: EmployeeListModel) {
             itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.Name
             itemView.findViewById<TextView>(R.id.txtEmployeeId).text =
-                "Code: " + item.Code
+                 item.Code
             itemView.findViewById<TextView>(R.id.txtStatus).text =
                 if (item.IsActive) "Active" else "InActive"
             if (item.IsActive)

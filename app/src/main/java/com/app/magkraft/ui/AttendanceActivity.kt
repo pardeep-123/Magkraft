@@ -39,6 +39,7 @@ import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.AttendanceEntity
 import com.app.magkraft.data.local.db.UserEntity
+import com.app.magkraft.ml.FaceOverlayView
 
 import com.app.magkraft.ml.FaceRecognizer
 import com.app.magkraft.ml.UltraFastAnalyzer
@@ -71,7 +72,7 @@ class AttendanceActivity : BaseActivity() {
     private lateinit var btnRegister: Button
     private lateinit var imageAnalysis: ImageAnalysis
 
-
+    private lateinit var faceOverlay: FaceOverlayView
     //    private lateinit var users: List<UserEntity>
     private var users: List<UserEntity> = emptyList()
     private var isCameraStarted = false
@@ -194,6 +195,7 @@ class AttendanceActivity : BaseActivity() {
         locationName = findViewById(R.id.locationName)
         tickImage = findViewById(R.id.tickImage)
         btnRegister = findViewById(R.id.btnRegister)
+        faceOverlay = findViewById(R.id.faceOverlay)
         resetUI()
 
         btnRegister.setOnClickListener {
@@ -283,6 +285,7 @@ class AttendanceActivity : BaseActivity() {
 
                 imageAnalysis.setAnalyzer(
                     cameraExecutor, UltraFastAnalyzer(
+faceOverlay,
                         users = users,
                         onMatch = { user -> processFastMatch(user) }
                     ))
@@ -368,7 +371,7 @@ class AttendanceActivity : BaseActivity() {
     private fun markAttendance(empId: UserEntity) {
 
         showLoader()
-        val now = SimpleDateFormat("yyyy-dd-MM HH:mm:ss", Locale.getDefault()).format(Date())
+        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
         val call = ApiClient.apiService.markAttendance(
             empId.empId,

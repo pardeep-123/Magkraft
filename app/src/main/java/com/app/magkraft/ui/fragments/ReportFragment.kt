@@ -1,20 +1,28 @@
 package com.app.magkraft.ui.fragments
 
 import android.app.DatePickerDialog
+import android.app.Dialog
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.content.res.Resources
 import android.icu.text.SimpleDateFormat
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.NumberPicker
 import android.widget.PopupWindow
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +42,8 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.OutputStreamWriter
+import java.text.DateFormatSymbols
 import java.util.Calendar
 import java.util.Locale
 
@@ -45,6 +55,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
     lateinit var etMonth: EditText
     lateinit var placeholder: TextView
     lateinit var btnViewReport: Button
+    lateinit var btnDownloadReport: Button
     lateinit var layoutEmpty: LinearLayout
     lateinit var progressBar: ProgressBar
     lateinit var rvReport: RecyclerView
@@ -60,7 +71,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
     private var year = ""
     private lateinit var adapter: ViewReportsAdapter
 
-    var authPref: AuthPref ?=null
+    var authPref: AuthPref? = null
 
 
     override fun onAttach(context: Context) {
@@ -68,6 +79,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         ctx = context
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         etGroup = view.findViewById(R.id.etGroup)
@@ -75,10 +87,11 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         etEmployee = view.findViewById(R.id.etEmployee)
         etMonth = view.findViewById(R.id.etMonth)
         btnViewReport = view.findViewById(R.id.btnViewReport)
-        layoutEmpty = view.findViewById(R.id.layoutEmpty)
+        layoutEmpty = view.findViewById(R.id.nameLayout)
         progressBar = view.findViewById(R.id.progressBar)
         rvReport = view.findViewById(R.id.rvReport)
         placeholder = view.findViewById(R.id.placeholder)
+        btnDownloadReport = view.findViewById(R.id.downloadReport)
         authPref = AuthPref(ctx!!)
         getGroups()
 
@@ -129,57 +142,98 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                     Toast.LENGTH_SHORT
                 ).show()
                 return@setOnClickListener
-            }else{
+            } else {
                 getEmployeesReports()
             }
 
-                    }
+        }
+
+        btnDownloadReport.setOnClickListener {
+            downloadCsv(employeeReportsList)
+        }
     }
 
     fun showMonthYearPicker(
         context: Context,
         onSelected: (String) -> Unit
     ) {
-        val calendar = Calendar.getInstance()
+        val dialog = Dialog(context)
+        dialog.setContentView(R.layout.dialog_month_year_picker)
 
-        val dialog = DatePickerDialog(
-            context,
-            { _, year, month, _ ->
-                this.month = (month + 1).toString()
-                this.year = year.toString()
+        val monthPicker = dialog.findViewById<NumberPicker>(R.id.monthPicker)
+        val yearPicker = dialog.findViewById<NumberPicker>(R.id.yearPicker)
+        val btnOk = dialog.findViewById<Button>(R.id.btnOk)
+        val btnCancel = dialog.findViewById<Button>(R.id.btnCancel)
 
-                val cal = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, year)
-                    set(Calendar.MONTH, month)
-                    set(Calendar.DAY_OF_MONTH, 1) // important
-                }
+        val months = DateFormatSymbols().months.take(12).toTypedArray()
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
 
-                val monthName = SimpleDateFormat(
-                    "MMMM",
-                    Locale.getDefault()
-                ).format(
-                    cal.time
-                )
+        monthPicker.minValue = 0
+        monthPicker.maxValue = 11
+        monthPicker.displayedValues = months
+        monthPicker.value = Calendar.getInstance().get(Calendar.MONTH)
 
-                onSelected("$monthName $year")
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
+        yearPicker.minValue = currentYear - 50
+        yearPicker.maxValue = currentYear + 10
+        yearPicker.value = currentYear
 
-        // ✅ Hide day picker safely
-        try {
-            val daySpinnerId =
-                Resources.getSystem().getIdentifier("day", "id", "android")
-            dialog.datePicker.findViewById<View>(daySpinnerId)?.visibility =
-                View.GONE
-        } catch (_: Exception) {
-            // ignore (some devices)
+        btnOk.setOnClickListener {
+            month = (months.indexOf(monthPicker.displayedValues[monthPicker.value]) + 1).toString()
+                year = yearPicker.value.toString()
+            onSelected("${months[monthPicker.value]} ${yearPicker.value}")
+            dialog.dismiss()
         }
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
 
         dialog.show()
     }
+
+//    fun showMonthYearPicker(
+//        context: Context,
+//        onSelected: (String) -> Unit
+//    ) {
+//        val calendar = Calendar.getInstance()
+//
+//        val dialog = DatePickerDialog(
+//            context,
+//            { _, year, month, _ ->
+//                this.month = (month + 1).toString()
+//                this.year = year.toString()
+//
+//                val cal = Calendar.getInstance().apply {
+//                    set(Calendar.YEAR, year)
+//                    set(Calendar.MONTH, month)
+//                    set(Calendar.DAY_OF_MONTH, 1) // important
+//                }
+//
+//                val monthName = SimpleDateFormat(
+//                    "MMMM",
+//                    Locale.getDefault()
+//                ).format(
+//                    cal.time
+//                )
+//
+//                onSelected("$monthName $year")
+//            },
+//            calendar.get(Calendar.YEAR),
+//            calendar.get(Calendar.MONTH),
+//            calendar.get(Calendar.DAY_OF_MONTH)
+//        )
+//
+//        // ✅ Hide day picker safely
+//        try {
+//            val daySpinnerId =
+//                Resources.getSystem().getIdentifier("day", "id", "android")
+//            dialog.datePicker.findViewById<View>(daySpinnerId)?.visibility =
+//                View.GONE
+//        } catch (_: Exception) {
+//            // ignore (some devices)
+//        }
+//
+//        dialog.show()
+//    }
+
 
 
     private fun showGroupPopup(
@@ -263,10 +317,12 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                      * Here we need to check , if group id is not 0 with user type 2, then
                      * set group id to that
                      */
-                    if(authPref?.get("userType")=="2"){
-                        if(authPref?.get("groupId")!="0"){
+                    if (authPref?.get("userType") == "2") {
+                        if (authPref?.get("groupId") != "0") {
                             groupId = authPref?.get("groupId").toString()
-                            etGroup.setText(groupList.firstOrNull{it.Id.toString()==groupId}?.Name?:"")
+                            etGroup.setText(
+                                groupList.firstOrNull { it.Id.toString() == groupId }?.Name ?: ""
+                            )
                             etGroup.isEnabled = false
 
                             getEmployeeList()
@@ -322,7 +378,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
 
         (ctx as MainActivity).showLoader()
 
-        val call = ApiClient.apiService.viewReports(employeeId,month,year)
+        val call = ApiClient.apiService.viewReports(employeeId, month, year)
 
         call.enqueue(object : Callback<List<ViewReportsModelItem>> {
 
@@ -338,6 +394,20 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                     employeeReportsList.reverse()
                     adapter.submitList(employeeReportsList)
                     placeholder.visibility = View.GONE
+                    if(employeeReportsList.isNotEmpty()){
+                        btnDownloadReport.visibility = View.VISIBLE
+                        layoutEmpty.visibility = View.VISIBLE
+                        val params = btnViewReport.layoutParams as LinearLayout.LayoutParams
+                        params.weight = 0.5f
+                        btnViewReport.layoutParams = params
+
+                    }else{
+                        btnDownloadReport.visibility = View.GONE
+                        layoutEmpty.visibility = View.GONE
+                        val params = btnViewReport.layoutParams as LinearLayout.LayoutParams
+                        params.weight = 1f
+                        btnViewReport.layoutParams = params
+                    }
                 } else {
                     placeholder.visibility = View.VISIBLE
 //                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
@@ -351,6 +421,48 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                 Toast.makeText(ctx, t.localizedMessage, Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun downloadCsv(list: List<ViewReportsModelItem>) {
+        val fileName = "employees_${System.currentTimeMillis()}.csv"
+
+        val resolver = requireContext().contentResolver
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)?:return
+
+
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                OutputStreamWriter(outputStream).use { writer ->
+                    writer.append("Name,Code,TimeStamp\n") // CSV header
+
+                    list.forEach { emp ->
+                        writer.append("${emp.Name},${emp.Code},${emp.TimeStamp}}\n")
+                    }
+
+//                    writer.flush()
+                }
+            }
+
+        // ✅ Mark file as complete (VISIBLE IN FILE MANAGER)
+        contentValues.clear()
+        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+        resolver.update(uri, contentValues, null, null)
+
+            Toast.makeText(requireContext(), "Saved to Downloads: $fileName", Toast.LENGTH_SHORT).show()
+
+        // ✅ Open file
+        val openIntent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "text/csv")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(openIntent, "Open CSV with"))
+
     }
 
 }

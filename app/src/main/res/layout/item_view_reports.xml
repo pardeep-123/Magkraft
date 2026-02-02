@@ -1,62 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="wrap_content"-->
-<!--    android:layout_marginBottom="10dp"-->
-<!--    app:cardCornerRadius="12dp"-->
-<!--    app:cardElevation="4dp">-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:orientation="vertical"
-        android:padding="5dp">
-
-<!--        <LinearLayout-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_weight="1"-->
-<!--            android:orientation="vertical">-->
-
-            <TextView
-                android:id="@+id/txtEmployeeName"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/txtEmployeeId"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:textSize="13sp" />
-            <TextView
-                android:id="@+id/groupId"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text=""
-                android:visibility="gone"
-                android:textSize="13sp"
-                 />
-            <TextView
-                android:id="@+id/timeStamp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text=""
-                android:textSize="13sp"
-                />
-        </LinearLayout>
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:weightSum="1">
 
 
+        <TextView
+            android:id="@+id/txtEmployeeName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.38"
+            android:gravity="start"
+            android:textColor="@color/black"
+            android:textSize="13sp" />
 
-<!--    </LinearLayout>-->
+        <TextView
+            android:id="@+id/txtEmployeeId"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.32"
+            android:gravity="start"
+            android:textSize="13sp" />
 
-<!--</com.google.android.material.card.MaterialCardView>-->
+        <TextView
+            android:id="@+id/groupId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text=""
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/timeStamp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:layout_weight="0.3"
+            android:text=""
+            android:gravity="start"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/mid_color" />
+
+</LinearLayout>
+
+    <!--</com.google.android.material.card.MaterialCardView>-->

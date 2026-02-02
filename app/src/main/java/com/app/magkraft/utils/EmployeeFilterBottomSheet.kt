@@ -14,9 +14,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class EmployeeFilterBottomSheet(
     private val groups: List<GroupListModel>,
-    private val selectedGroupId: String?,
-    private val selectedStatus: String?,
-    private val onApply: (groupId: String?, status: String?) -> Unit
+    private val selectedGroupId: Int?,
+    private var selectedStatus: Boolean?,
+    private val onApply: (groupId: Int?, status: Boolean?) -> Unit
 ) : BottomSheetDialogFragment() {
 
     override fun onCreateView(
@@ -48,10 +48,25 @@ class EmployeeFilterBottomSheet(
         val statuses = listOf("Active", "Inactive")
         val statusAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, statuses)
         etStatus.setAdapter(statusAdapter)
-        etStatus.setText(selectedStatus ?: "", false)
+
+        // Hint only (no preselect)
+        etStatus.hint = "Select Status"
+        etStatus.setText("", false)
+
+        // Preselect
+        when (selectedStatus) {
+            true -> etStatus.setText("Active", false)
+            false -> etStatus.setText("Inactive", false)
+            null -> etStatus.setText("", false)
+        }
+
+        etStatus.setOnItemClickListener { _, _, position, _ ->
+            selectedStatus = position == 0
+        }
+//        etStatus.setText(selectedStatus ?: "", false)
 
         btnApply.setOnClickListener {
-            onApply(selectedGroup?.Id.toString(), etStatus.text.toString().ifEmpty { null })
+            onApply(selectedGroup?.Id, selectedStatus)
             dismiss()
         }
 

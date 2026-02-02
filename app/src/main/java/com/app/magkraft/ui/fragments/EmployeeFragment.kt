@@ -14,9 +14,13 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.MainActivity
@@ -58,25 +62,6 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
 
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        setHasOptionsMenu(true)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_employee, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_filter -> {
-                openFilterBottomSheet()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
@@ -112,6 +97,28 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
         CoroutineScope(Dispatchers.Main).launch{
             getGroups()
         }
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_employee, menu)
+
+                val filterItem = menu.findItem(R.id.action_filter)
+                filterItem.icon?.setTint(ContextCompat.getColor(requireContext(), R.color.white))
+
+
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_filter -> {
+                        openFilterBottomSheet()
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
     }
 
 
@@ -233,8 +240,8 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
             .show()
     }
 
-    private var selectedGroupId: String? = null
-    private var selectedStatus: String? = null
+    private var selectedGroupId: Int? = null
+    private var selectedStatus: Boolean? = null
 
     private fun openFilterBottomSheet() {
         EmployeeFilterBottomSheet(
@@ -250,9 +257,9 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
 
     private fun applyFilters() {
         val filtered = employeeList.filter { emp ->
-            val groupMatch = selectedGroupId == null || emp.GroupId == selectedGroupId?.toInt()
-//            val statusMatch = selectedStatus == null || emp.IsActive == selectedStatus
-            groupMatch
+            val groupMatch = selectedGroupId == null || emp.GroupId == selectedGroupId
+            val statusMatch = selectedStatus == null || emp.IsActive == selectedStatus
+            groupMatch && statusMatch
         }
 
         adapter.submitList(filtered)

@@ -27,8 +27,8 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         authPref = AuthPref(view.context)
-        textName = view.findViewById(R.id.titleName)
+        textName = view.findViewById(R.id.tvUserName)
 
-        textName?.text = authPref?.get("fullName").toString()
+        textName?.text = "Name : "+authPref?.get("fullName").toString()
     }
 }

@@ -264,6 +264,7 @@
                 android:id="@+id/faceOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:visibility="gone"
                 app:layout_constraintHeight_percent="0.5"
                 app:layout_constraintTop_toTopOf="parent" />
 

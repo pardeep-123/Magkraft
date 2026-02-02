@@ -29,8 +29,8 @@ data class EmployeeListModel(
     val Id: Int,
     val IsActive: Boolean,
     val IsDeleted: Boolean,
-    val LocationId: Int,
-    val LocationName: String,
+    val LocationId: Int?=0,
+    val LocationName: String?="",
     val Name: String,
     val Photo: String
 ) : Parcelable

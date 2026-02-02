@@ -14,61 +14,39 @@
         android:layout_height="wrap_content"/>
 
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/groupCardView"
+    <!-- Group Dropdown -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
+        android:hint="Select Group"
+        android:layout_marginHorizontal="@dimen/_5sdp"
+        android:padding="10dp"
+        app:endIconMode="dropdown_menu">
 
-        app:layout_constraintTop_toTopOf="parent"
-        app:cardBackgroundColor="@color/white"
-        android:layout_margin="@dimen/_15sdp"
-        android:padding="1dp">
-        <!-- Group -->
         <AutoCompleteTextView
             android:id="@+id/etGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_1sdp"
-            android:background="@null"
-            android:cursorVisible="false"
             android:padding="@dimen/_10sdp"
-            android:drawableEnd="@drawable/ic_arrow_down"
-            android:drawablePadding="8dp"
-            android:hint="Group"
-            android:textSize="@dimen/_12ssp"
-            android:focusable="false"/>
+            android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/statusCardView"
+    <!-- Group Dropdown -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
-        android:layout_weight="1"
-        app:layout_constraintTop_toBottomOf="@id/groupCardView"
-        app:cardBackgroundColor="@color/white"
-        android:layout_marginHorizontal="@dimen/_15sdp"
-        android:padding="12dp">
-        <!-- Group -->
+        android:hint="Select Status"
+        android:layout_marginHorizontal="@dimen/_5sdp"
+        android:padding="10dp"
+        app:endIconMode="dropdown_menu">
+
         <AutoCompleteTextView
             android:id="@+id/etStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/_1sdp"
-            android:background="@null"
-            android:cursorVisible="false"
             android:padding="@dimen/_10sdp"
-            android:drawableEnd="@drawable/ic_arrow_down"
-            android:drawablePadding="8dp"
-            android:hint="Status"
-            android:textSize="@dimen/_12ssp"
-            android:focusable="false"/>
-
-    </com.google.android.material.card.MaterialCardView>
+            android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -82,6 +60,7 @@
         android:layout_height="wrap_content"
         android:text="Apply"
         android:layout_weight="1"
+android:backgroundTint="@color/mid_color"
         android:textColor="@color/dark"
         android:layout_marginHorizontal="@dimen/_15sdp"
         android:layout_marginTop="16dp"/>
@@ -94,6 +73,7 @@
         android:textColor="@color/dark"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="@dimen/_15sdp"
+        android:backgroundTint="@color/mid_color"
         android:text="Clear"/>
     </LinearLayout>
 </LinearLayout>

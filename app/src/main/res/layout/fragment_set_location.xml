@@ -14,7 +14,7 @@
         android:fontFamily="sans-serif-medium"
         android:text="Set Your Location"
         android:layout_gravity="center"
-        android:textColor="@color/pink_color"
+        android:textColor="@color/dark"
         android:textSize="@dimen/_14ssp" />
 
     <TextView
@@ -23,7 +23,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="sans-serif-medium"
         android:text="Group"
-        android:textColor="@color/pink_color"
+        android:textColor="@color/dark"
         android:textSize="@dimen/_14ssp" />
 
     <EditText
@@ -48,7 +48,7 @@
         android:layout_marginTop="8dp"
         android:fontFamily="sans-serif-medium"
         android:text="Location"
-        android:textColor="@color/pink_color"
+        android:textColor="@color/dark"
         android:textSize="@dimen/_14ssp" />
 
     <EditText
@@ -72,6 +72,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
+        android:textColor="@color/dark"
         android:text="Save"
          />
 

@@ -92,16 +92,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.menu_group -> loadFragment(GroupFragment(), "GROUP")
-            R.id.menu_location -> loadFragment(LocationFragment(), "Location")
-            R.id.menu_set_location -> loadFragment(SetLocationFragment(), "SetLocation")
-            R.id.menu_employee -> loadFragment(EmployeeFragment(), "Employee")
-            R.id.menu_report -> loadFragment(ReportFragment(), "Reports")
-            R.id.mark_attendance -> loadFragment(ManualAttendanceFragment(), "Manual Attendance")
-            R.id.menu_logout -> showLogoutDialog(this)
+        return when (item.itemId) {
+            R.id.menu_group -> { loadFragment(GroupFragment(), "GROUP"); true }
+            R.id.menu_location -> { loadFragment(LocationFragment(), "Location"); true }
+            R.id.menu_set_location -> { loadFragment(SetLocationFragment(), "SetLocation"); true }
+            R.id.menu_employee -> { loadFragment(EmployeeFragment(), "Employee"); true }
+            R.id.menu_report -> { loadFragment(ReportFragment(), "Reports"); true }
+            R.id.mark_attendance -> { loadFragment(ManualAttendanceFragment(), "Manual Attendance"); true }
+            R.id.menu_logout -> { showLogoutDialog(this); true }
+            else -> super.onOptionsItemSelected(item) // ⭐ THIS LINE IS KEY
         }
-        return true
     }
 
     private fun loadHomeFragment() {

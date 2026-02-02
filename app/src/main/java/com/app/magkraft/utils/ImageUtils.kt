@@ -182,5 +182,36 @@ object ImageUtils {
 
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
+
+    // Inside ImageUtils
+    fun safeCrop(bitmap: Bitmap, viewOval: RectF, overlayWidth: Int, overlayHeight: Int): Bitmap? {
+        val scaleX = bitmap.width.toFloat() / overlayWidth.coerceAtLeast(1)
+        val scaleY = bitmap.height.toFloat() / overlayHeight.coerceAtLeast(1)
+
+        // 1. Center of the screen
+        val centerX = viewOval.centerX() * scaleX
+        val centerY = viewOval.centerY() * scaleY
+
+        // 2. 🔥 THE ZOOM FIX:
+        // We take a smaller square (35% of bitmap width instead of 50%).
+        // This forces the crop to be JUST the face, cutting out shoulders.
+        val faceZoneSize = (bitmap.width * 0.40f)
+
+        val left = (centerX - faceZoneSize / 2).toInt().coerceIn(0, bitmap.width - 1)
+        val top = (centerY - faceZoneSize / 2).toInt().coerceIn(0, bitmap.height - 1)
+
+        val width = faceZoneSize.toInt().coerceIn(1, bitmap.width - left)
+        val height = faceZoneSize.toInt().coerceIn(1, bitmap.height - top)
+
+        return try {
+            val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
+            // Scale to 112x112 so the AI sees a "Full Face" every time
+            val standardized = Bitmap.createScaledBitmap(cropped, 112, 112, true)
+            if (cropped != standardized) cropped.recycle()
+            standardized
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
 

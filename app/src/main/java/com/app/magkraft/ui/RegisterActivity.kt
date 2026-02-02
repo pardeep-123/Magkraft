@@ -1,6 +1,7 @@
 package com.app.magkraft.ui
 
 import android.graphics.Bitmap
+import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -89,7 +90,7 @@ class RegisterActivity : BaseActivity() {
     private lateinit var imageAnalysis: ImageAnalysis
     private lateinit var cameraExecutor: ExecutorService
     private var groupId = ""
-    private var locationId = ""
+//    private var locationId = ""
 
     private var groupList = ArrayList<GroupListModel>()
     private var locationList = ArrayList<LocationListModel>()
@@ -103,6 +104,48 @@ class RegisterActivity : BaseActivity() {
     private val employeeViewModel: EmployeeViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory.getInstance(this.application)
     }
+
+    /**
+     * workign code for oval shape
+     */
+//    private fun startCamera() {
+//        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+//        cameraProviderFuture.addListener({
+//            cameraProvider = cameraProviderFuture.get()
+//
+//            val preview = Preview.Builder()
+//                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+//                .build()
+//                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+//
+//            imageAnalysis = ImageAnalysis.Builder()
+//                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+////                .setTargetResolution(Size(640, 480))  // Faster
+//                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//                .setImageQueueDepth(1)
+//                .build()
+//
+//            // ✅ LIVE PREVIEW ANALYZER (shows face position)
+//            imageAnalysis.setAnalyzer(
+//                cameraExecutor, RegisterAnalyzer(
+//                    onFaceReady = { faceBitmap ->
+//                        // Live preview only - NO saving
+//                        runOnUiThread {
+//                            ivFace.setImageBitmap(faceBitmap)
+//                        }
+//                    }
+//                ))
+//
+//            cameraProvider!!.unbindAll()
+//            cameraProvider!!.bindToLifecycle(
+//                this,
+//                CameraSelector.DEFAULT_FRONT_CAMERA,
+//                preview,
+//                imageAnalysis
+//            )
+//        }, ContextCompat.getMainExecutor(this))
+//    }
+
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
@@ -115,29 +158,44 @@ class RegisterActivity : BaseActivity() {
 
             imageAnalysis = ImageAnalysis.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-//                .setTargetResolution(Size(640, 480))  // Faster
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setImageQueueDepth(1)
                 .build()
 
-            // ✅ LIVE PREVIEW ANALYZER (shows face position)
+            // ✅ PASS THE OVERLAY HERE
+            // This ensures the analyzer knows exactly where the "invisible" oval is
             imageAnalysis.setAnalyzer(
                 cameraExecutor, RegisterAnalyzer(
+                    faceOverlay = faceOverlay, // 🔥 Pass the actual View
                     onFaceReady = { faceBitmap ->
-                        // Live preview only - NO saving
                         runOnUiThread {
                             ivFace.setImageBitmap(faceBitmap)
+                            // 2. 🔥 ACTIVATE GREEN BORDER
+                            // This calls invalidate() inside the view to show the box
+                            faceOverlay.updateFaceStatus(true)
+
+                            // 3. AUTO-CAPTURE LOGIC (Optional)
+                            // If you want it to capture automatically after seeing a face
+                            // for a split second, you can call capturePhoto() here.
+                            // But for now, let's just enable the button.
+                            btnTakePhoto.isEnabled = true
+
                         }
                     }
                 ))
 
-            cameraProvider!!.unbindAll()
-            cameraProvider!!.bindToLifecycle(
-                this,
-                CameraSelector.DEFAULT_FRONT_CAMERA,
-                preview,
-                imageAnalysis
-            )
+            try {
+                cameraProvider?.unbindAll()
+                cameraProvider?.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_FRONT_CAMERA,
+                    preview,
+                    imageAnalysis
+                )
+//                isCameraStarted = true
+            } catch (e: Exception) {
+                Log.e("CameraX", "Binding failed", e)
+            }
         }, ContextCompat.getMainExecutor(this))
     }
 
@@ -171,7 +229,7 @@ class RegisterActivity : BaseActivity() {
             etGroup.setText(it.GroupName)
 //            etLocation.setText(it.LocationName)
             groupId = it.GroupId.toString()
-            locationId = it.LocationId.toString()
+//            locationId = it.LocationId.toString()
             embeddingBase64 = it.Photo
             employeeId = it.Id.toString()
 
@@ -248,7 +306,7 @@ class RegisterActivity : BaseActivity() {
 
         val etDesignation = etDesignation.text.toString()
 
-        if (name.isEmpty() || empId.isEmpty() || etDesignation.isEmpty() || groupId == "" || locationId == "" || (employeeId.isEmpty() && capturedFace == null)) {
+        if (name.isEmpty() || empId.isEmpty() || etDesignation.isEmpty() || groupId == ""  || (employeeId.isEmpty() && capturedFace == null)) {
             Toast.makeText(this, "Fill all fields and capture face", Toast.LENGTH_LONG).show()
             return
         } else {
@@ -311,40 +369,79 @@ class RegisterActivity : BaseActivity() {
         }
     }
 
+    /**
+     * current function is commented for invisible oval shape
+     */
+//    private fun capturePhoto() {
+//        val previewBitmap = previewView.bitmap ?: return
+//        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = true)
+//        val ovalRect = faceOverlay.getOvalRect()
+//
+//        val faceBitmap = Bitmap.createBitmap(
+//            correctedBitmap,
+//            ovalRect.left.toInt().coerceAtLeast(0),
+//            ovalRect.top.toInt().coerceAtLeast(0),
+//            ovalRect.width().toInt().coerceAtMost(correctedBitmap.width),
+//            ovalRect.height().toInt().coerceAtMost(correctedBitmap.height)
+//        )
+//
+//        // ✅ Safe recycle
+//        capturedFace?.recycle()
+//        capturedFace = faceBitmap
+//        ivFace.setImageBitmap(capturedFace)
+//
+//        isImageCaptured = true
+//        btnSave.isEnabled = true  // Enable save button
+//
+//        lifecycleScope.launch {
+//            val embedding =
+//                withContext(Dispatchers.Default) {
+//                    FaceRecognizer.getInstance().getEmbedding(faceBitmap)
+//                }
+////                val imageBytes = bitmapToByteArray(capturedFace!!)
+//            embeddingBase64 =
+//                withContext(Dispatchers.Default) {
+//                    floatArrayToBase64(embedding)
+//                }
+//        }
+//        previewBitmap.recycle()
+//        previewContainer.visibility = View.GONE
+//    }
+
     private fun capturePhoto() {
         val previewBitmap = previewView.bitmap ?: return
-        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = true)
-        val ovalRect = faceOverlay.getOvalRect()
+        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = false)
 
-        val faceBitmap = Bitmap.createBitmap(
-            correctedBitmap,
-            ovalRect.left.toInt().coerceAtLeast(0),
-            ovalRect.top.toInt().coerceAtLeast(0),
-            ovalRect.width().toInt().coerceAtMost(correctedBitmap.width),
-            ovalRect.height().toInt().coerceAtMost(correctedBitmap.height)
-        )
+        // 🔥 Use the safeCrop function here
+        val faceBitmap = ImageUtils.safeCrop(correctedBitmap, faceOverlay.getOvalRect(),
+            overlayWidth = faceOverlay.width,
+            overlayHeight = faceOverlay.height
+            )
 
-        // ✅ Safe recycle
+        if (faceBitmap != null) {
+            processFinalFace(faceBitmap)
+        }
+
+        if (correctedBitmap != previewBitmap) correctedBitmap.recycle()
+        previewContainer.visibility = View.GONE
+    }
+
+    // Move the processing to a separate function to keep capturePhoto clean
+    private fun processFinalFace(faceBitmap: Bitmap) {
         capturedFace?.recycle()
         capturedFace = faceBitmap
         ivFace.setImageBitmap(capturedFace)
-
         isImageCaptured = true
-        btnSave.isEnabled = true  // Enable save button
+        btnSave.isEnabled = true
 
         lifecycleScope.launch {
-            val embedding =
-                withContext(Dispatchers.Default) {
-                    FaceRecognizer.getInstance().getEmbedding(faceBitmap)
-                }
-//                val imageBytes = bitmapToByteArray(capturedFace!!)
-            embeddingBase64 =
-                withContext(Dispatchers.Default) {
-                    floatArrayToBase64(embedding)
-                }
+            val embedding = withContext(Dispatchers.Default) {
+                FaceRecognizer.getInstance().getEmbedding(faceBitmap)
+            }
+            embeddingBase64 = withContext(Dispatchers.Default) {
+                floatArrayToBase64(embedding)
+            }
         }
-        previewBitmap.recycle()
-        previewContainer.visibility = View.GONE
     }
 
     override fun onDestroy() {
@@ -369,7 +466,7 @@ class RegisterActivity : BaseActivity() {
                 etEmpId.text.toString().trim(),
                 etDesignation.text.toString().trim(),
                 groupId,
-                locationId,
+//                locationId,
                 status,
                 "0",
                 image
@@ -381,7 +478,7 @@ class RegisterActivity : BaseActivity() {
                 etEmpId.text.toString().trim(),
                 etDesignation.text.toString().trim(),
                 groupId,
-                locationId,
+//                locationId,
                 status,
                 "0",
                 image,
@@ -573,7 +670,6 @@ class RegisterActivity : BaseActivity() {
 //        popup.elevation = 12f
 //        popup.showAsDropDown(anchor)
 //    }
-
 
 
 

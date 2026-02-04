@@ -176,7 +176,7 @@ class AttendanceActivity : BaseActivity() {
         // Set white overflow icon
         toolbar.overflowIcon =
             ContextCompat.getDrawable(this, R.drawable.more)?.apply {
-                setTint(ContextCompat.getColor(this@AttendanceActivity, android.R.color.white))
+                setTint(ContextCompat.getColor(this@AttendanceActivity, android.R.color.black))
             }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = ContextCompat.getColor(
@@ -348,7 +348,7 @@ faceOverlay,
     }
 
     private fun resetUI() {
-        txtStatus.text = "Align your Face In Oval"
+        txtStatus.text = "Align your Face In Camera"
         txtName.visibility = View.INVISIBLE
         txtReady.visibility = View.VISIBLE
         tickImage.visibility = View.INVISIBLE

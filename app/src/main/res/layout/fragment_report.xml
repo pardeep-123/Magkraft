@@ -226,6 +226,7 @@
                 android:layout_height="match_parent"
                 android:visibility="visible"
 android:layout_marginTop="@dimen/_30sdp"
+                android:layout_marginBottom="@dimen/_30sdp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
         </FrameLayout>

@@ -79,12 +79,10 @@ import android.view.View
 class FaceOverlayView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : View(context, attrs) {
-
-    private val borderPaint = Paint().apply {
-        color = Color.GREEN
+    private val paint = Paint().apply {
         style = Paint.Style.STROKE
         strokeWidth = 8f
-        isAntiAlias = true
+        pathEffect = DashPathEffect(floatArrayOf(20f, 10f), 0f)
     }
 
     private var isFaceDetected = false
@@ -93,16 +91,42 @@ class FaceOverlayView @JvmOverloads constructor(
     // Call this from the Activity/Fragment via the Analyzer callback
     fun updateFaceStatus(detected: Boolean) {
         this.isFaceDetected = detected
-        invalidate() // 🔄 This tells Android to call onDraw() immediately
+        postInvalidate() // Refresh the UI
+    }
+    // In FaceOverlayView.kt
+    private var currentFaceRect: RectF? = null
+
+    fun setDynamicRect(rect: Rect?, previewWidth: Int, previewHeight: Int) {
+        if (rect == null) {
+            currentFaceRect = null
+            postInvalidate()
+            return
+        }
+
+        // 1. Calculate Scales (Swap W/H for Portrait)
+        val scaleX = width.toFloat() / previewHeight.toFloat()
+        val scaleY = height.toFloat() / previewWidth.toFloat()
+
+        // 2. Mirror the X-axis (Front Camera logic)
+        // We flip the coordinates so Left becomes Right and Right becomes Left
+        val flippedLeft = (previewHeight - rect.right) * scaleX
+        val flippedRight = (previewHeight - rect.left) * scaleX
+
+        val top = rect.top * scaleY
+        val bottom = rect.bottom * scaleY
+
+        currentFaceRect = RectF(flippedLeft, top, flippedRight, bottom)
+        postInvalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        // Only draw the border if the Analyzer confirms a face is there
-//        if (isFaceDetected) {
-//            canvas.drawOval(getOvalRect(), borderPaint)
-//        }
+        currentFaceRect?.let { rect ->
+            paint.color = if (isFaceDetected) Color.GREEN else Color.WHITE
+            canvas.drawOval(rect, paint) // Draw the circle around the detected face
+        }
     }
+
+
 
     fun getOvalRect(): RectF {
         // Fallback: If view isn't laid out yet, return a small default to avoid 0-width crash

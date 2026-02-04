@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         val toolbarMain = findViewById<Toolbar>(R.id.toolbarMain)
         toolbarMain.overflowIcon =
             ContextCompat.getDrawable(this, R.drawable.more)?.apply {
-                setTint(ContextCompat.getColor(this@MainActivity, android.R.color.white))
+                setTint(ContextCompat.getColor(this@MainActivity, android.R.color.black))
             }
 
         setSupportActionBar(toolbarMain)

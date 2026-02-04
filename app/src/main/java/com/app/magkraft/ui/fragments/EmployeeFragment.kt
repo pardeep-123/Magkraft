@@ -103,7 +103,7 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
                 menuInflater.inflate(R.menu.menu_employee, menu)
 
                 val filterItem = menu.findItem(R.id.action_filter)
-                filterItem.icon?.setTint(ContextCompat.getColor(requireContext(), R.color.white))
+                filterItem.icon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
 
 
             }

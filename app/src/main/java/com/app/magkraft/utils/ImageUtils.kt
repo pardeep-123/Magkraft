@@ -185,33 +185,84 @@ object ImageUtils {
 
     // Inside ImageUtils
     fun safeCrop(bitmap: Bitmap, viewOval: RectF, overlayWidth: Int, overlayHeight: Int): Bitmap? {
+        // 1. Calculate how much bigger the camera image is than the screen
         val scaleX = bitmap.width.toFloat() / overlayWidth.coerceAtLeast(1)
         val scaleY = bitmap.height.toFloat() / overlayHeight.coerceAtLeast(1)
 
-        // 1. Center of the screen
-        val centerX = viewOval.centerX() * scaleX
-        val centerY = viewOval.centerY() * scaleY
-
-        // 2. 🔥 THE ZOOM FIX:
-        // We take a smaller square (35% of bitmap width instead of 50%).
-        // This forces the crop to be JUST the face, cutting out shoulders.
-        val faceZoneSize = (bitmap.width * 0.40f)
-
-        val left = (centerX - faceZoneSize / 2).toInt().coerceIn(0, bitmap.width - 1)
-        val top = (centerY - faceZoneSize / 2).toInt().coerceIn(0, bitmap.height - 1)
-
-        val width = faceZoneSize.toInt().coerceIn(1, bitmap.width - left)
-        val height = faceZoneSize.toInt().coerceIn(1, bitmap.height - top)
+        // 2. Map the UI Oval coordinates to the Bitmap pixels
+        val left = (viewOval.left * scaleX).toInt().coerceIn(0, bitmap.width - 1)
+        val top = (viewOval.top * scaleY).toInt().coerceIn(0, bitmap.height - 1)
+        val width = (viewOval.width() * scaleX).toInt().coerceIn(1, bitmap.width - left)
+        val height = (viewOval.height() * scaleY).toInt().coerceIn(1, bitmap.height - top)
 
         return try {
             val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
-            // Scale to 112x112 so the AI sees a "Full Face" every time
+
+            // 3. 🔥 THE CRITICAL STEP:
+            // Force the face inside the oval to be exactly 112x112.
+            // This makes the "distance" look identical to the AI every time.
             val standardized = Bitmap.createScaledBitmap(cropped, 112, 112, true)
+
             if (cropped != standardized) cropped.recycle()
             standardized
         } catch (e: Exception) {
             null
         }
+    }
+
+    fun cropToFace(bitmap: Bitmap, faceRect: Rect, previewWidth: Int, previewHeight: Int): Bitmap {
+        // 1. Calculate the ratio between the bitmap and the preview stream
+        val scaleX = bitmap.width.toFloat() / previewWidth
+        val scaleY = bitmap.height.toFloat() / previewHeight
+
+        // 2. Map coordinates and add a small "padding" so we don't crop too tightly
+        val padding = (faceRect.width() * 0.1f).toInt()
+        val left = (faceRect.left * scaleX).toInt().coerceIn(0, bitmap.width - 1)
+        val top = (faceRect.top * scaleY).toInt().coerceIn(0, bitmap.height - 1)
+        val width = (faceRect.width() * scaleX).toInt().coerceAtMost(bitmap.width - left)
+        val height = (faceRect.height() * scaleY).toInt().coerceAtMost(bitmap.height - top)
+
+        val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
+
+        // 3. Always resize to 112x112 for the model
+        val standardized = Bitmap.createScaledBitmap(cropped, 112, 112, true)
+        if (cropped != standardized) cropped.recycle()
+
+        return standardized
+    }
+
+    fun cropToFaceRaw(bitmap: Bitmap, faceRect: Rect, sensorWidth: Int, sensorHeight: Int): Bitmap {
+        val scaleX = bitmap.width.toFloat() / sensorWidth
+        val scaleY = bitmap.height.toFloat() / sensorHeight
+
+        // Standard mapping for raw sensor data
+        val left = (faceRect.left * scaleX).toInt().coerceIn(0, bitmap.width - 1)
+        val top = (faceRect.top * scaleY).toInt().coerceIn(0, bitmap.height - 1)
+        val width = (faceRect.width() * scaleX).toInt().coerceAtMost(bitmap.width - left)
+        val height = (faceRect.height() * scaleY).toInt().coerceAtMost(bitmap.height - top)
+
+        val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
+        val final = Bitmap.createScaledBitmap(cropped, 112, 112, true)
+        if (cropped != final) cropped.recycle()
+        return final
+    }
+
+    fun cropToFaceMirrored(bitmap: Bitmap, faceRect: Rect, previewWidth: Int, previewHeight: Int): Bitmap {
+        val scaleX = bitmap.width.toFloat() / previewWidth
+        val scaleY = bitmap.height.toFloat() / previewHeight
+
+        // 🔥 MIRROR CALCULATION: (Width - Right) flips the box to match the mirrored UI
+        val correctedLeft = (previewWidth - faceRect.right) * scaleX
+
+        val left = correctedLeft.toInt().coerceIn(0, bitmap.width - 1)
+        val top = (faceRect.top * scaleY).toInt().coerceIn(0, bitmap.height - 1)
+        val width = (faceRect.width() * scaleX).toInt().coerceAtMost(bitmap.width - left)
+        val height = (faceRect.height() * scaleY).toInt().coerceAtMost(bitmap.height - top)
+
+        val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
+        val final = Bitmap.createScaledBitmap(cropped, 112, 112, true)
+        if (cropped != final) cropped.recycle()
+        return final
     }
 }
 

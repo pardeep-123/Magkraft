@@ -423,6 +423,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         })
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun downloadCsv(list: List<ViewReportsModelItem>) {
         val fileName = "employees_${System.currentTimeMillis()}.csv"
 

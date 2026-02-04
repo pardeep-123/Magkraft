@@ -1,6 +1,7 @@
 package com.app.magkraft.ui
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
@@ -94,13 +95,16 @@ class RegisterActivity : BaseActivity() {
 
     private var groupList = ArrayList<GroupListModel>()
     private var locationList = ArrayList<LocationListModel>()
-
+    var latestDetectedFaceRect: Rect? = null
     private var employeeData: EmployeeListModel? = null
 
     var embeddingBase64 = ""
     var employeeId = ""
 
     var authPref: AuthPref ?=null
+
+    private var latestFaceBitmap: Bitmap? = null
+
     private val employeeViewModel: EmployeeViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory.getInstance(this.application)
     }
@@ -167,6 +171,7 @@ class RegisterActivity : BaseActivity() {
             imageAnalysis.setAnalyzer(
                 cameraExecutor, RegisterAnalyzer(
                     faceOverlay = faceOverlay, // 🔥 Pass the actual View
+                    activity = this,
                     onFaceReady = { faceBitmap ->
                         runOnUiThread {
                             ivFace.setImageBitmap(faceBitmap)
@@ -408,22 +413,76 @@ class RegisterActivity : BaseActivity() {
 //        previewContainer.visibility = View.GONE
 //    }
 
+//    private fun capturePhoto() {
+//        val previewBitmap = previewView.bitmap ?: return
+//
+//        // 1. Get the current face location from ML Kit (stored in your analyzer or activity)
+//        val faceRect = latestDetectedFaceRect // You should save this Rect from your Analyzer
+//
+//        if (faceRect == null) {
+//            Toast.makeText(this, "No face detected to capture!", Toast.LENGTH_SHORT).show()
+//            return
+//        }
+//
+//        // 2. Correct rotation (previewView.bitmap is usually already oriented correctly)
+//        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = false)
+//
+//        // 3. 🔥 NEW CROP FUNCTION: Use the Dynamic Face Bounds
+//        val faceBitmap = ImageUtils.cropToFace(
+//            correctedBitmap,
+//            faceRect,
+//            previewView.width,
+//            previewView.height
+//        )
+//
+//        if (faceBitmap != null) {
+//            processFinalFace(faceBitmap)
+//        }
+//
+//        if (correctedBitmap != previewBitmap) correctedBitmap.recycle()
+//         previewContainer.visibility = View.GONE // Keep it visible until save if you prefer
+//    }
+
+
     private fun capturePhoto() {
         val previewBitmap = previewView.bitmap ?: return
-        val correctedBitmap = ImageUtils.getCorrectedBitmap(previewBitmap, 0, isFrontCamera = false)
+        val faceRect = latestDetectedFaceRect ?: return
 
-        // 🔥 Use the safeCrop function here
-        val faceBitmap = ImageUtils.safeCrop(correctedBitmap, faceOverlay.getOvalRect(),
-            overlayWidth = faceOverlay.width,
-            overlayHeight = faceOverlay.height
-            )
+        // 1. Get Analyzer Dimensions (Must match what you pass to detector)
+        // Most ML Kit setups use 480x640 or 720x1280
+        val sensorWidth = 480f
+        val sensorHeight = 640f
 
-        if (faceBitmap != null) {
-            processFinalFace(faceBitmap)
+        // 2. Calculate Scales
+        val scaleX = previewBitmap.width.toFloat() / sensorWidth
+        val scaleY = previewBitmap.height.toFloat() / sensorHeight
+
+        // 3. 🔥 TRANSFORM COORDINATES (Mirroring & Rotation Fix)
+        // For Front Camera: The 'left' in the sensor is actually (SensorWidth - Right) on screen
+        val correctedLeft = (sensorWidth - faceRect.right) * scaleX
+        val correctedTop = faceRect.top * scaleY
+        val correctedWidth = faceRect.width() * scaleX
+        val correctedHeight = faceRect.height() * scaleY
+
+        try {
+            // 4. Perform the Crop using transformed coordinates
+            val left = correctedLeft.toInt().coerceIn(0, previewBitmap.width - 1)
+            val top = correctedTop.toInt().coerceIn(0, previewBitmap.height - 1)
+            val width = correctedWidth.toInt().coerceAtMost(previewBitmap.width - left)
+            val height = correctedHeight.toInt().coerceAtMost(previewBitmap.height - top)
+
+            val croppedFace = Bitmap.createBitmap(previewBitmap, left, top, width, height)
+
+            // 5. Standardize to 112x112 for matching
+            val finalFace = Bitmap.createScaledBitmap(croppedFace, 112, 112, true)
+
+            ivFace.setImageBitmap(finalFace)
+            processFinalFace(finalFace)
+            previewContainer.visibility = View.GONE
+
+        } catch (e: Exception) {
+            Log.e("Capture", "Crop failed: ${e.message}")
         }
-
-        if (correctedBitmap != previewBitmap) correctedBitmap.recycle()
-        previewContainer.visibility = View.GONE
     }
 
     // Move the processing to a separate function to keep capturePhoto clean

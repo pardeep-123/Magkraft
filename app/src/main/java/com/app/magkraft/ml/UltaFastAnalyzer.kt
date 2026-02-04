@@ -7,6 +7,9 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.app.magkraft.data.local.db.UserEntity
 import com.app.magkraft.utils.ImageUtils
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 
 class UltraFastAnalyzer(
     private val faceOverlay: FaceOverlayView,
@@ -22,76 +25,65 @@ class UltraFastAnalyzer(
     /**
      * here is the gemini code
      */
+
+    // Add this to your UltraFast class
+    private val detector = FaceDetection.getClient(
+        FaceDetectorOptions.Builder()
+            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+            .build()
+    )
+
     override fun analyze(imageProxy: ImageProxy) {
-        val now = System.currentTimeMillis()
+        val mediaImage = imageProxy.image ?: return
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-        // 1. Quick exits: Cooldown OR already processing a frame
-        if (isProcessing || (now - lastMatchTime < COOLDOWN_MS)) {
-            imageProxy.close()
-            return
-        }
-
-        isProcessing = true // Lock
-
-        try {
-            // 1. Convert YUV ImageProxy to Bitmap only when needed
-            // Most Face SDKs have a utility for this, e.g., ImageUtils or FaceNet
-            val rotation = imageProxy.imageInfo.rotationDegrees
-            val bitmap = ImageUtils.yuvToBitmap(imageProxy)
-            // 2. Convert to Bitmap ONCE
-
-            bitmap?.let { fullBitmap ->
-                val correctedBitmap = ImageUtils.getCorrectedBitmap(fullBitmap, rotation, isFrontCamera = true)
-                fullBitmap.recycle()
-                // 3. Perform the crop
-//                val faceCrop = getCroppedFace(correctedBitmap)
-                val faceCrop = ImageUtils.safeCrop(correctedBitmap, faceOverlay.getOvalRect(),
-                    overlayWidth = faceOverlay.width,
-                    overlayHeight = faceOverlay.height)
-                // Immediately recycle the huge original bitmap to free memory
-                correctedBitmap.recycle()
-
-                if (faceCrop?.width!! >= 50 && faceCrop.height >= 50) {
-
-
-                    // If the embedding values are too close to zero (flat), it's a wall, not a face.
-                    if (isImageDetailed(faceCrop)) {
-                        val embedding = FaceRecognizer.getInstance().getEmbedding(faceCrop)
-                    val match = FaceMatcher.findBestMatch(embedding, users)
-
-                    if (match != null) {
-                        lastMatchTime = System.currentTimeMillis()
-                        // Use a Handler to post to Main Thread safely
-                        Handler(Looper.getMainLooper()).post {
-                            // ✅ Show feedback to the user immediately
-                            faceOverlay.updateFaceStatus(true)
-                            onMatch(match)
-                        }}
-                    }else {
-                        // Optional: Update overlay to show a "searching" state
-                         Handler(Looper.getMainLooper()).post { faceOverlay.updateFaceStatus(false) }
-                    }
+        // Inside UltraFastAnalyzer.analyze success listener
+        detector.process(image)
+            .addOnSuccessListener { faces ->
+                if (faces.isEmpty()) {
+                    // No face? Clear the UI
+                    faceOverlay.setDynamicRect(null, 0, 0)
+                    imageProxy.close()
+                    return@addOnSuccessListener
                 }
-                faceCrop.recycle() // Clean up the crop
-            }
-        } catch (e: Exception) {
-            Log.e("UltraFast", "Analysis error", e)
-        } finally {
-            // 4. ALWAYS close the proxy and unlock
-            imageProxy.close()
-            isProcessing = false
-        }
-    }
 
-    private fun isEmbeddingValid(embedding: FloatArray): Boolean {
-        // A real face embedding should have a certain amount of "energy"
-        var sumOfSquares = 0f
-        for (value in embedding) {
-            sumOfSquares += value * value
-        }
-        // Normalized embeddings should have a sum of squares near 1.0.
-        // If it's near 0, the model didn't find any features.
-        return sumOfSquares > 0.8f
+                val face = faces[0]
+                // 1. Tell the UI to draw a circle around THIS face
+                faceOverlay.setDynamicRect(face.boundingBox, imageProxy.width, imageProxy.height)
+
+                if (!isProcessing && (System.currentTimeMillis() - lastMatchTime > COOLDOWN_MS)) {
+                    isProcessing = true
+
+                    val bitmap = ImageUtils.yuvToBitmap(imageProxy)
+                    bitmap?.let { full ->
+                        val corrected = ImageUtils.getCorrectedBitmap(full, imageProxy.imageInfo.rotationDegrees, true)
+
+                        // 2. Crop exactly where the detector found the face
+                        val faceCrop = ImageUtils.cropToFaceRaw(corrected, face.boundingBox, imageProxy.width, imageProxy.height)
+
+                        // 3. Check detail and Match
+                        if (isImageDetailed(faceCrop)) {
+                            val embedding = FaceRecognizer.getInstance().getEmbedding(faceCrop)
+                            val match = FaceMatcher.findBestMatch(embedding, users)
+
+                            if (match != null) {
+                                lastMatchTime = System.currentTimeMillis()
+                                Handler(Looper.getMainLooper()).post {
+                                    faceOverlay.updateFaceStatus(true) // Turn Green
+                                    onMatch(match)
+                                }
+                            }
+                        }
+                        faceCrop.recycle()
+                        corrected.recycle()
+                    }
+                    isProcessing = false
+                }
+                imageProxy.close()
+            }
+            .addOnFailureListener {
+                imageProxy.close()
+            }
     }
 
     /**
@@ -143,24 +135,25 @@ class UltraFastAnalyzer(
         val pixels = IntArray(width * height)
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
-        var sum = 0f
-        for (pixel in pixels) {
-            val r = (pixel shr 16) and 0xFF
-            val g = (pixel shr 8) and 0xFF
-            val b = pixel and 0xFF
-            sum += (r + g + b) / 3f
-        }
-        val average = sum / (width * height)
+        var sum = 0.0
+        var sumSq = 0.0
+        val n = (width * height).toDouble()
 
-        var variance = 0f
         for (pixel in pixels) {
-            val gray = ((pixel shr 16 and 0xFF) + (pixel shr 8 and 0xFF) + (pixel and 0xFF)) / 3f
-            variance += (gray - average) * (gray - average)
+            // Fast grayscale conversion: (R+G+B)/3
+            val gray = (((pixel shr 16) and 0xFF) + ((pixel shr 8) and 0xFF) + (pixel and 0xFF)) / 3.0
+            sum += gray
+            sumSq += gray * gray
         }
 
-        // If variance is very low, it's a flat surface (wall).
-        // Usually, a face has a variance > 100. Adjust this number if needed.
-        return (variance / (width * height)) > 100f
+        // Variance formula: (SumSq / N) - (Mean^2)
+        val mean = sum / n
+        val variance = (sumSq / n) - (mean * mean)
+
+        // 🔥 ADJUSTMENT: 100f is very safe.
+        // If it's too hard to detect your face, try 50f or 70f.
+        Log.d("VarianceCheck", "Variance: $variance")
+        return variance > 70.0
     }
 }
 

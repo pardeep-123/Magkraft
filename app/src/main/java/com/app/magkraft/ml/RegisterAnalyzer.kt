@@ -95,59 +95,63 @@ class RegisterAnalyzer(
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
             .build()
     )
-
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image ?: return
-        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+        val image = InputImage.fromMediaImage(mediaImage, rotationDegrees)
 
         detector.process(image)
             .addOnSuccessListener { faces ->
                 if (faces.isEmpty()) {
-                    faceOverlay.setDynamicRect(null, 0, 0) // Clear oval if no face
+                    faceOverlay.setDynamicRect(null, 0, 0)
                     imageProxy.close()
                     return@addOnSuccessListener
                 }
 
                 val face = faces[0]
-                activity.latestDetectedFaceRect = face.boundingBox // Update activity
-                // 🔥 Pass imageProxy dimensions so the Overlay can map them to the screen
-                faceOverlay.setDynamicRect(face.boundingBox,
-                    imageProxy.width,
-                    imageProxy.height)
+                val sensorWidth = imageProxy.width
+                val sensorHeight = imageProxy.height
+
+                // 1. Update Activity Rect for the "Capture Button"
+                activity.latestDetectedFaceRect = face.boundingBox
+
+                // 2. 🔥 TABLET OVAL FIX: Pass dimensions and Rotation
+                // In Portrait, we must swap width/height if rotation is 90 or 270
+                faceOverlay.setDynamicRect(face.boundingBox, sensorWidth, sensorHeight)
 
                 val now = System.currentTimeMillis()
-                if (!isProcessing && (now - lastProcessTime > 500)) {
+                if (!isProcessing && (now - lastProcessTime > 800)) { // Increased delay for tablet stability
                     isProcessing = true
                     lastProcessTime = now
 
                     val bitmap = ImageUtils.yuvToBitmap(imageProxy)
                     bitmap?.let { full ->
-                        // isFrontCamera = true is critical here for mirroring
-                        val corrected = ImageUtils.getCorrectedBitmap(full, imageProxy.imageInfo.rotationDegrees, true)
+                        // 3. 🔥 CRITICAL: rotationDegrees ensures the bitmap is upright
+                        val corrected = ImageUtils.getCorrectedBitmap(full, rotationDegrees, true)
 
-                        // This crop MUST be identical to your ScanActivity crop
-                        val faceCrop = ImageUtils.cropToFaceMirrored(corrected, face.boundingBox, imageProxy.width, imageProxy.height)
+                        // 4. 🔥 CROP MATCHING:
+                        // Use the RAW dimensions because 'corrected' is now rotated.
+                        // If your UltraFastAnalyzer uses raw sensor data, use Raw here too!
+                        val faceCrop = ImageUtils.cropToFaceRaw(
+                            corrected,
+                            face.boundingBox,
+                            sensorWidth,
+                            sensorHeight
+                        )
 
                         if (isImageDetailed(faceCrop)) {
-                            onFaceReady(faceCrop) // Send to UI for preview/storage
-
-                            Handler(Looper.getMainLooper()).post {
-                                faceOverlay.updateFaceStatus(true) // Turn Green
-                            }
+                            onFaceReady(faceCrop)
+                            Handler(Looper.getMainLooper()).post { faceOverlay.updateFaceStatus(true) }
                         } else {
-                            Handler(Looper.getMainLooper()).post {
-                                faceOverlay.updateFaceStatus(false) // Turn Red/White
-                            }
+                            Handler(Looper.getMainLooper()).post { faceOverlay.updateFaceStatus(false) }
                         }
                         corrected.recycle()
-                        // Note: Don't recycle faceCrop here if onFaceReady needs to display it
                     }
                     isProcessing = false
                 }
                 imageProxy.close()
             }
             .addOnFailureListener {
-                Log.e("RegisterAnalyzer", "Detection failed", it)
                 imageProxy.close()
             }
     }

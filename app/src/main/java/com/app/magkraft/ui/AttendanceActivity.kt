@@ -30,7 +30,10 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -172,6 +175,13 @@ class AttendanceActivity : BaseActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         enableEdgeToEdge()
         setSupportActionBar(toolbar)
+        // Fix for Android 11 System Bar Overlap
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_root_layout)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Apply padding to your bottom section so it sits ABOVE the nav buttons
+            view.updatePadding(bottom = insets.bottom)
+            windowInsets
+        }
         authPref = AuthPref(this)
         // Set white overflow icon
         toolbar.overflowIcon =
@@ -287,7 +297,8 @@ class AttendanceActivity : BaseActivity() {
                     cameraExecutor, UltraFastAnalyzer(
 faceOverlay,
                         users = users,
-                        onMatch = { user -> processFastMatch(user) }
+                        onMatch = { user -> processFastMatch(user) },
+                        this
                     ))
 
                 try {

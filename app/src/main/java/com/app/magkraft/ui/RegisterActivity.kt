@@ -1,6 +1,7 @@
 package com.app.magkraft.ui
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Bundle
@@ -28,6 +29,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -207,6 +209,13 @@ class RegisterActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
+        // Fix for Android 11 System Bar Overlap
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_root_layout1)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            // Apply padding to your bottom section so it sits ABOVE the nav buttons
+            view.updatePadding(bottom = insets.bottom)
+            windowInsets
+        }
 
         btn = findViewById(R.id.btnEdit)
         btnSave = findViewById(R.id.btnSave)
@@ -477,6 +486,7 @@ class RegisterActivity : BaseActivity() {
             val finalFace = Bitmap.createScaledBitmap(croppedFace, 112, 112, true)
 
             ivFace.setImageBitmap(finalFace)
+            ImageUtils.saveBitmapToDisk(this, finalFace, "register_face")
             processFinalFace(finalFace)
             previewContainer.visibility = View.GONE
 

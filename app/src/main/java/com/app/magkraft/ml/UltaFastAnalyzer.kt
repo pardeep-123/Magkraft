@@ -1,5 +1,7 @@
 package com.app.magkraft.ml
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -14,7 +16,8 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 class UltraFastAnalyzer(
     private val faceOverlay: FaceOverlayView,
     private val users: List<UserEntity>,
-    private val onMatch: (UserEntity) -> Unit
+    private val onMatch: (UserEntity) -> Unit,
+    private val context : Context
 ) : ImageAnalysis.Analyzer {
 
     private var lastMatchTime = 0L
@@ -35,47 +38,94 @@ class UltraFastAnalyzer(
 
     override fun analyze(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image ?: return
-        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+        val image = InputImage.fromMediaImage(mediaImage, rotationDegrees)
 
-        // Inside UltraFastAnalyzer.analyze success listener
         detector.process(image)
             .addOnSuccessListener { faces ->
                 if (faces.isEmpty()) {
-                    // No face? Clear the UI
                     faceOverlay.setDynamicRect(null, 0, 0)
                     imageProxy.close()
                     return@addOnSuccessListener
                 }
 
                 val face = faces[0]
-                // 1. Tell the UI to draw a circle around THIS face
-                faceOverlay.setDynamicRect(face.boundingBox, imageProxy.width, imageProxy.height)
+                val sensorWidth = imageProxy.width
+                val sensorHeight = imageProxy.height
 
-                if (!isProcessing && (System.currentTimeMillis() - lastMatchTime > COOLDOWN_MS)) {
+                // 1. Fix the UI Overlay: Pass raw sensor dimensions
+                faceOverlay.setDynamicRect(face.boundingBox, sensorWidth, sensorHeight)
+
+                if (!isProcessing && (System.currentTimeMillis() - lastMatchTime > 1000)) {
                     isProcessing = true
 
                     val bitmap = ImageUtils.yuvToBitmap(imageProxy)
                     bitmap?.let { full ->
-                        val corrected = ImageUtils.getCorrectedBitmap(full, imageProxy.imageInfo.rotationDegrees, true)
+                        // 2. Rotate the bitmap based on sensor metadata
+                     //   val upright = ImageUtils.getCorrectedBitmap(full, rotationDegrees,true)
 
-                        // 2. Crop exactly where the detector found the face
-                        val faceCrop = ImageUtils.cropToFaceRaw(corrected, face.boundingBox, imageProxy.width, imageProxy.height)
+//                        val faceCrop = ImageUtils.cropToFaceRaw(
+//                            corrected,
+//                            face.boundingBox,
+//                            sensorWidth,
+//                            sensorHeight
+//                        )
+//
+//                        val matrix = Matrix().apply { postScale(-1f, 1f, 56f, 56f) }
+//                        val alignedFace = Bitmap.createBitmap(faceCrop, 0, 0, 112, 112, matrix, true)
+//                        ImageUtils.saveBitmapToDisk(context, alignedFace, "scan_face")
+                        // 2. STABLE CENTER-CROP (Fixes the "Half-Face" shift)
+// 1. Get the face center as a PERCENTAGE of the sensor
+                        // imageProxy.width/height are the dimensions ML Kit used for detection
+                        // 1. Correct the orientation of the full bitmap
+                        val upright = ImageUtils.getCorrectedBitmap(full, imageProxy.imageInfo.rotationDegrees,true)
 
-                        // 3. Check detail and Match
-                        if (isImageDetailed(faceCrop)) {
-                            val embedding = FaceRecognizer.getInstance().getEmbedding(faceCrop)
+                        // 2. 🔥 FIX THE STRETCH: Use sensor dimensions that match the rotation
+                        // This ensures the "percentage" is calculated against the correct axis
+                        val sensorWidth = if (imageProxy.imageInfo.rotationDegrees % 180 != 0) imageProxy.height else imageProxy.width
+                        val sensorHeight = if (imageProxy.imageInfo.rotationDegrees % 180 != 0) imageProxy.width else imageProxy.height
+
+                        // 3. Calculate Center Percent using the accurate sensor dimensions
+                        val centerXPercent = face.boundingBox.centerX().toFloat() / sensorWidth
+                        val centerYPercent = face.boundingBox.centerY().toFloat() / sensorHeight
+
+                        // 4. Map to Bitmap pixels
+                        val bitmapCenterX = centerXPercent * upright.width
+                        val bitmapCenterY = centerYPercent * upright.height
+
+                        // Calculate box size relative to the correct sensor width
+                        val widthPercent = face.boundingBox.width().toFloat() / sensorWidth
+                        val boxSize = (widthPercent * upright.width * 1.2f).toInt()
+
+                        // 5. Calculate Bounds
+                        val left = (bitmapCenterX - boxSize / 2).toInt().coerceIn(0, (upright.width - boxSize).coerceAtLeast(0))
+                        val top = (bitmapCenterY - boxSize / 2).toInt().coerceIn(0, (upright.height - boxSize).coerceAtLeast(0))
+
+                        // 6. Crop and Resize
+                        val faceCrop = Bitmap.createBitmap(upright, left, top,
+                            boxSize.coerceAtMost(upright.width - left),
+                            boxSize.coerceAtMost(upright.height - top))
+                        val resized = Bitmap.createScaledBitmap(faceCrop, 112, 112, true)
+
+                        // 7. 🔥 THE MIRROR FLIP: Crucial to match 'register_face' ear-side
+                        val matrix = Matrix().apply { postScale(-1f, 1f, 56f, 56f) }
+                        val finalScanFace = Bitmap.createBitmap(resized, 0, 0, 112, 112, matrix, true)
+                        // 7. Save to check the new center
+                        ImageUtils.saveBitmapToDisk(context, finalScanFace, "scan_face_percent")
+                        if (isImageDetailed(finalScanFace)) {
+                            val embedding = FaceRecognizer.getInstance().getEmbedding(finalScanFace)
                             val match = FaceMatcher.findBestMatch(embedding, users)
 
                             if (match != null) {
                                 lastMatchTime = System.currentTimeMillis()
                                 Handler(Looper.getMainLooper()).post {
-                                    faceOverlay.updateFaceStatus(true) // Turn Green
+                                    faceOverlay.updateFaceStatus(true)
                                     onMatch(match)
                                 }
                             }
                         }
-                        faceCrop.recycle()
-                        corrected.recycle()
+                        // faceCrop.recycle() // Keep if passing to another function
+                        upright.recycle()
                     }
                     isProcessing = false
                 }

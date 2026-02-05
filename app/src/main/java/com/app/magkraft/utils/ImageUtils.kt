@@ -1,8 +1,12 @@
 package com.app.magkraft.utils
+import android.content.Context
 import android.graphics.*
+import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.annotation.OptIn
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 object ImageUtils {
 
@@ -13,7 +17,6 @@ object ImageUtils {
             else -> null
         }
     }
-
 
 
 // ================= JPEG =================
@@ -247,22 +250,45 @@ object ImageUtils {
         return final
     }
 
-    fun cropToFaceMirrored(bitmap: Bitmap, faceRect: Rect, previewWidth: Int, previewHeight: Int): Bitmap {
-        val scaleX = bitmap.width.toFloat() / previewWidth
-        val scaleY = bitmap.height.toFloat() / previewHeight
+    fun cropToFaceMirrored(bitmap: Bitmap, rect: Rect, viewWidth: Int, viewHeight: Int): Bitmap {
+        val scaleX = bitmap.width.toFloat() / viewWidth
+        val scaleY = bitmap.height.toFloat() / viewHeight
 
-        // 🔥 MIRROR CALCULATION: (Width - Right) flips the box to match the mirrored UI
-        val correctedLeft = (previewWidth - faceRect.right) * scaleX
+        // This is the direct mapping that worked for your oval
+        val left = (viewWidth - rect.right) * scaleX
+        val top = rect.top * scaleY
+        val width = rect.width() * scaleX
+        val height = rect.height() * scaleY
 
-        val left = correctedLeft.toInt().coerceIn(0, bitmap.width - 1)
-        val top = (faceRect.top * scaleY).toInt().coerceIn(0, bitmap.height - 1)
-        val width = (faceRect.width() * scaleX).toInt().coerceAtMost(bitmap.width - left)
-        val height = (faceRect.height() * scaleY).toInt().coerceAtMost(bitmap.height - top)
+        // Create the square crop
+        val size = (width * 1.1f).toInt()
+        val centerX = left + (width / 2)
+        val centerY = top + (height / 2)
 
-        val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
-        val final = Bitmap.createScaledBitmap(cropped, 112, 112, true)
-        if (cropped != final) cropped.recycle()
-        return final
+        val cropLeft =
+            (centerX - size / 2).toInt().coerceIn(0, (bitmap.width - size).coerceAtLeast(0))
+        val cropTop =
+            (centerY - size / 2).toInt().coerceIn(0, (bitmap.height - size).coerceAtLeast(0))
+
+        val cropped = Bitmap.createBitmap(
+            bitmap, cropLeft, cropTop,
+            size.coerceAtMost(bitmap.width - cropLeft),
+            size.coerceAtMost(bitmap.height - cropTop)
+        )
+
+        return Bitmap.createScaledBitmap(cropped, 112, 112, true)
+    }
+
+    fun saveBitmapToDisk(context: Context, bitmap: Bitmap, fileName: String) {
+        try {
+            val file = File(context.filesDir, "$fileName.png")
+            val out = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            out.flush()
+            out.close()
+            Log.d("DEBUG_IMAGE", "Saved $fileName to: ${file.absolutePath}")
+        } catch (e: Exception) {
+            Log.e("DEBUG_IMAGE", "Failed to save $fileName", e)
+        }
     }
 }
-

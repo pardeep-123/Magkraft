@@ -1,81 +1,95 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <include layout="@layout/layout_toolbar"/>
-    <!-- 🔼 CAMERA SECTION (50%) -->
-    <FrameLayout
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <include layout="@layout/layout_toolbar" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1.2">
 
-        <!-- Camera Preview -->
-        <androidx.camera.view.PreviewView
-            android:id="@+id/previewView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:scaleType="fillCenter"/>
+        <FrameLayout
+            android:id="@+id/cameraContainer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="3:4"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Oval Face Overlay -->
-        <com.app.magkraft.ml.FaceOverlayView
-            android:id="@+id/faceOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            <androidx.camera.view.PreviewView
+                android:id="@+id/previewView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:scaleType="fillCenter" />
 
-    </FrameLayout>
+            <com.app.magkraft.ml.FaceOverlayView
+                android:id="@+id/faceOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-    <!-- 🔽 RESULT SECTION (50%) -->
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="0.8"
+        android:background="@color/black"
         android:gravity="top|center"
         android:orientation="vertical"
-        android:background="@color/black"
         android:padding="16dp">
 
         <ImageView
             android:id="@+id/tickImage"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="30dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="10dp"
             android:contentDescription="@string/app_name"
             android:src="@drawable/check"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/txtStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
             android:layout_marginTop="10dp"
             android:text="@string/alignFace"
-            android:textSize="12sp"
-            android:textStyle="normal" />
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
         <TextView
             android:id="@+id/txtReady"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/readyForScan"
-            android:textSize="12sp"
-            android:textStyle="normal" />
+            android:textColor="@color/white"
+            android:textSize="12sp" />
+
         <TextView
             android:id="@+id/txtName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text=""
-            android:textSize="16sp" />
+            android:layout_marginTop="15dp"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/groupName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text=""
-            android:textColor="@color/white"
+            android:layout_marginTop="4dp"
+            android:textColor="#CCCCCC"
             android:textSize="14sp" />
 
         <TextView
@@ -83,8 +97,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text=""
-            android:textColor="@color/white"
+            android:textColor="#CCCCCC"
             android:textSize="14sp" />
 
         <Button
@@ -92,9 +105,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:visibility="gone"
-            android:text="@string/register" />
+            android:text="@string/register"
+            android:visibility="gone" />
 
     </LinearLayout>
-
 </LinearLayout>

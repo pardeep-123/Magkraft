@@ -53,6 +53,9 @@ object FaceMatcher {
     private fun cosineSimilarity(a: FloatArray, b: FloatArray?): Float {
 
         if (b == null || a.size != b.size) return 0f // Safety check
+
+        Log.d("VECTORS", "A: ${a[0]}, ${a[1]}, ${a[2]}")
+        Log.d("VECTORS", "B: ${b[0]}, ${b[1]}, ${b[2]}")
         var dot = 0f
         for (i in a.indices) {
             dot += a[i] * b[i]

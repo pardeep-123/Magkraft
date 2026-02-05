@@ -96,33 +96,58 @@ class FaceOverlayView @JvmOverloads constructor(
     // In FaceOverlayView.kt
     private var currentFaceRect: RectF? = null
 
-    fun setDynamicRect(rect: Rect?, previewWidth: Int, previewHeight: Int) {
+    fun setDynamicRect(rect: Rect?, sensorWidth: Int, sensorHeight: Int) {
         if (rect == null) {
             currentFaceRect = null
             postInvalidate()
             return
         }
 
-        // 1. Calculate Scales (Swap W/H for Portrait)
-        val scaleX = width.toFloat() / previewHeight.toFloat()
-        val scaleY = height.toFloat() / previewWidth.toFloat()
+        // 🔥 SWAP for Portrait Tablet:
+        // SensorWidth (Long side) maps to View Height
+        // SensorHeight (Short side) maps to View Width
+        val scaleX = width.toFloat() / sensorHeight.toFloat()
+        val scaleY = height.toFloat() / sensorWidth.toFloat()
 
-        // 2. Mirror the X-axis (Front Camera logic)
-        // We flip the coordinates so Left becomes Right and Right becomes Left
-        val flippedLeft = (previewHeight - rect.right) * scaleX
-        val flippedRight = (previewHeight - rect.left) * scaleX
-
+        // Mirroring for front camera
+        val left = (sensorHeight - rect.right) * scaleX
+        val right = (sensorHeight - rect.left) * scaleX
         val top = rect.top * scaleY
         val bottom = rect.bottom * scaleY
 
-        currentFaceRect = RectF(flippedLeft, top, flippedRight, bottom)
+        // 🔥 FORCE OVAL RATIO: Even if the view is wide, make the oval look like a face
+        val centerX = (left + right) / 2
+        val centerY = (top + bottom) / 2
+        val portraitWidth = (right - left) * 0.9f
+        val portraitHeight = portraitWidth * 1.4f // Standard head ratio
+
+        currentFaceRect = RectF(
+            centerX - portraitWidth / 2,
+            centerY - portraitHeight / 2,
+            centerX + portraitWidth / 2,
+            centerY + portraitHeight / 2
+        )
         postInvalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
         currentFaceRect?.let { rect ->
-            paint.color = if (isFaceDetected) Color.GREEN else Color.WHITE
-            canvas.drawOval(rect, paint) // Draw the circle around the detected face
+            val centerX = rect.centerX()
+            val centerY = rect.centerY()
+
+            // Force the oval to be 1.4 times taller than it is wide
+            // This prevents the "Horizontal/Flattened" look on Tablets
+            val headWidth = rect.width() * 0.8f
+            val headHeight = headWidth * 1.4f
+
+            val ovalRect = RectF(
+                centerX - headWidth / 2,
+                centerY - headHeight / 2,
+                centerX + headWidth / 2,
+                centerY + headHeight / 2
+            )
+            canvas.drawOval(ovalRect, paint)
         }
     }
 

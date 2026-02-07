@@ -40,8 +40,6 @@ class LoginActivity : BaseActivity() {
         loginBtn = findViewById(R.id.loginBT)
         emailET = findViewById(R.id.emailET)
         passwordET = findViewById(R.id.passwordET)
-        emailET.setText("Admin")
-        passwordET.setText("Admin@409")
         loginBtn.setOnClickListener {
 
             if (emailET.text.toString().isEmpty() && passwordET.text.toString().isEmpty()) {

@@ -577,7 +577,7 @@ class RegisterActivity : BaseActivity() {
 //            getEmployeesListByGroup()
 //        }
 //                        lifecycleScope.launch(Dispatchers.IO) {
-                            employeeViewModel.syncEmployees()
+                            employeeViewModel.syncEmployees(showUI = false)
                       //  }
                     }
 

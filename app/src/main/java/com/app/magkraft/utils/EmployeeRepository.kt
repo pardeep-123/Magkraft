@@ -18,26 +18,41 @@ class EmployeeRepository(
     // Expose the Flow directly to the ViewModel
     fun getEmployeesFlow(): Flow<List<UserEntity>> = dao.getAllUsers()
 
-    suspend fun syncEmployees() {
-        // 1️⃣ Get groupId from SharedPreferences
-        val groupId = authPref.getLocation("groupId")
+//    suspend fun syncEmployees() {
+//        // 1️⃣ Get groupId from SharedPreferences
+//        val groupId = authPref.getLocation("groupId")
+//
+//
+//        // 2️⃣ Call API
+//        val response = api.getEmployeesByGroupId(groupId)
+//        if (response.isSuccessful && response.body() != null) {
+//
+//            val users = response.body()!!
+//                .filter { it.IsActive && !it.IsDeleted }
+//                .map { it.toUserEntity() }
+//            dao.updateAllUsers(users)
+//
+//        }
+//
+//    }
 
+    suspend fun syncEmployees(): Result<Unit> {
+        return try {
+            val groupId = authPref.getLocation("groupId")
+            val response = api.getEmployeesByGroupId(groupId)
 
-        // 2️⃣ Call API
-        val response = api.getEmployeesByGroupId(groupId)
-        if (response.isSuccessful && response.body() != null) {
-
-            val users = response.body()!!
-                .filter { it.IsActive && !it.IsDeleted }
-                .map { it.toUserEntity() }
-
-            dao.updateAllUsers(users)
-//            dao.clearUsers()
-//            dao.insertUser(users)   // ✅ list insert
+            if (response.isSuccessful && response.body() != null) {
+                val users = response.body()!!
+                    .filter { it.IsActive && !it.IsDeleted }
+                    .map { it.toUserEntity() }
+                dao.updateAllUsers(users)
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("API Error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-//        dao.clearUsers()
-//        dao.insertUser(users)
     }
 
     fun EmployeeListModel.toUserEntity(): UserEntity {

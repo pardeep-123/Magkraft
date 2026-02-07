@@ -8,7 +8,17 @@ import com.app.magkraft.network.ApiClient
 import kotlinx.coroutines.Dispatchers
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+sealed class SyncState {
+    object Idle : SyncState()
+    object Loading : SyncState()
+    data class Success(val message: String) : SyncState()
+    data class Error(val message: String) : SyncState()
+}
 
 class EmployeeViewModel(application: Application)
     : AndroidViewModel(application) {
@@ -30,14 +40,31 @@ class EmployeeViewModel(application: Application)
         allEmployees = repository.getEmployeesFlow()
     }
 
-    fun syncEmployees() {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.syncEmployees()
+    // Inside EmployeeViewModel
+    private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
+    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+
+    fun syncEmployees(showUI: Boolean = false) {
+        viewModelScope.launch {
+            if (showUI) _syncState.value = SyncState.Loading
+
+            val result = repository.syncEmployees()
+
+            if (showUI) {
+                result.fold(
+                    onSuccess = { _syncState.value = SyncState.Success("Employees Synced SuccessFully") },
+                    onFailure = { _syncState.value = SyncState.Error(it.message ?: "Sync Failed") }
+                )
+            }
         }
     }
 
-//    suspend fun getEmployees(): List<UserEntity> {
-//        return repository.getEmployees()
+//    fun syncEmployees() {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            repository.syncEmployees()
+//        }
 //    }
+
+
 }
 

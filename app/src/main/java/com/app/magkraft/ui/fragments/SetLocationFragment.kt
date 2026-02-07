@@ -4,17 +4,26 @@ import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.PopupWindow
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.MainActivity
@@ -26,6 +35,7 @@ import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.utils.AuthPref
 import com.app.magkraft.utils.EmployeeViewModel
+import com.app.magkraft.utils.SyncState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,6 +57,7 @@ class SetLocationFragment : Fragment() {
     private var ctx: Context? = null
 
     private lateinit var etGroup: EditText
+    private lateinit var loader: ProgressBar
     private lateinit var etLocation: EditText
     private lateinit var saveBtn: Button
     var auth: AuthPref? = null
@@ -54,6 +65,7 @@ class SetLocationFragment : Fragment() {
     private val employeeViewModel: EmployeeViewModel by viewModels {
         ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
     }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         ctx = context
@@ -72,12 +84,14 @@ class SetLocationFragment : Fragment() {
         etGroup = view.findViewById(R.id.etGroup)
         etLocation = view.findViewById(R.id.etLocation)
         saveBtn = view.findViewById(R.id.btnSave)
+        loader = view.findViewById(R.id.loader)
         auth = AuthPref(ctx!!)
 
-        if(auth?.getLocation("groupName")!=""){
+        if (auth?.getLocation("groupName") != "") {
             etGroup.setText(auth?.getLocation("groupName"))
             etLocation.setText(auth?.getLocation("locationName"))
-
+             groupId = auth?.getLocation("groupId").toString()
+             locationId = auth?.getLocation("locationId").toString()
         }
         etLocation.setOnClickListener {
             if (groupId.isEmpty()) {
@@ -101,6 +115,8 @@ class SetLocationFragment : Fragment() {
 
                 etGroup.setText(it.Name)
                 groupId = it.Id.toString()
+                locationId = ""
+                etLocation.setText("")
 
                 CoroutineScope(Dispatchers.Main).launch {
                     getLocationList(groupId.toInt())
@@ -111,7 +127,7 @@ class SetLocationFragment : Fragment() {
         saveBtn.setOnClickListener {
             if (groupId.isEmpty() || locationId.isEmpty()) {
 
-                (ctx as MainActivity).showToast(ctx!!,"Select Above Fields")
+                (ctx as MainActivity).showToast(ctx!!, "Select Above Fields")
 
             } else {
                 auth?.putLocation("groupId", groupId)
@@ -125,10 +141,75 @@ class SetLocationFragment : Fragment() {
                     .commit()
 
 //                    lifecycleScope.launch(Dispatchers.IO) {
-                        employeeViewModel.syncEmployees()
+                employeeViewModel.syncEmployees(showUI = true)
 
-              //  }
+                //  }
             }
+        }
+
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_refresh, menu)
+
+                val filterItem = menu.findItem(R.id.action_refresh)
+                filterItem.icon?.setTint(ContextCompat.getColor(requireContext(), R.color.black))
+
+
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_refresh -> {
+                        if (auth?.getLocation("groupName") != "") {
+                            employeeViewModel.syncEmployees(showUI = true)
+                        } else {
+                            Toast.makeText(
+                                ctx,
+                                "Select Group Name and Location Name First",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                        }
+                        true
+                    }
+
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
+
+        // Observe the state from the ViewModel
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                employeeViewModel.syncState.collect { state ->
+                    when (state) {
+                        is SyncState.Loading -> {
+                            loader.visibility = View.VISIBLE
+                            saveBtn.isEnabled = false // Disable button while loading
+                        }
+
+                        is SyncState.Success -> {
+                            loader.visibility = View.GONE
+                            saveBtn.isEnabled = true
+                            Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                            // Optional: Navigate to next screen on success
+                        }
+
+                        is SyncState.Error -> {
+                            loader.visibility = View.GONE
+                            saveBtn.isEnabled = true
+                            Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                        }
+
+                        is SyncState.Idle -> {
+                            loader.visibility = View.GONE
+                        }
+                    }
+                }
+            }
+
         }
     }
 

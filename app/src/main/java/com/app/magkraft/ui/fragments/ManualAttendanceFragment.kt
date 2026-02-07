@@ -222,7 +222,7 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
                      * Here we need to check , if group id is not 0 with user type 2, then
                      * set group id to that
                      */
-                    if(authPref?.get("userType")=="2"){
+                    if(authPref?.get("userType")=="2" || authPref?.get("userType")=="3"){
                         if(authPref?.get("groupId")!="0"){
                             groupId = authPref?.get("groupId").toString()
                             etGroup.setText(groupList.firstOrNull{it.Id.toString()==groupId}?.Name?:"")

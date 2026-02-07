@@ -143,34 +143,98 @@ object ImageUtils {
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
+//    fun yuvToBitmap(imageProxy: ImageProxy): Bitmap? {
+//        val nv21 = yuv420ToNv21(imageProxy)
+//        val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
+//        val out = ByteArrayOutputStream()
+//        yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 90, out)
+//        val imageBytes = out.toByteArray()
+//        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+//    }
+//
+//    private fun yuv420ToNv21(image: ImageProxy): ByteArray {
+//        val yBuffer = image.planes[0].buffer
+//        val uBuffer = image.planes[1].buffer
+//        val vBuffer = image.planes[2].buffer
+//
+//        val ySize = yBuffer.remaining()
+//        val uSize = uBuffer.remaining()
+//        val vSize = vBuffer.remaining()
+//
+//        val nv21 = ByteArray(ySize + uSize + vSize)
+//
+//        yBuffer.get(nv21, 0, ySize)
+//        vBuffer.get(nv21, ySize, vSize)
+//        uBuffer.get(nv21, ySize + vSize, uSize)
+//
+//        return nv21
+//    }
+
     fun yuvToBitmap(imageProxy: ImageProxy): Bitmap? {
-        val nv21 = yuv420ToNv21(imageProxy)
+        val nv21 = yuvToNv21(imageProxy) // Using the stride-aware version
         val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
         val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 90, out)
+        // Use 100 for max quality to help the AI score
+        yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 100, out)
         val imageBytes = out.toByteArray()
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
     }
 
-    private fun yuv420ToNv21(image: ImageProxy): ByteArray {
-        val yBuffer = image.planes[0].buffer
-        val uBuffer = image.planes[1].buffer
-        val vBuffer = image.planes[2].buffer
+    private fun yuvToNv21(image: ImageProxy): ByteArray {
+        val width = image.width
+        val height = image.height
 
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
+        val yPlane = image.planes[0]
+        val uPlane = image.planes[1]
+        val vPlane = image.planes[2]
 
-        val nv21 = ByteArray(ySize + uSize + vSize)
+        val yBuffer = yPlane.buffer
+        val uBuffer = uPlane.buffer
+        val vBuffer = vPlane.buffer
 
-        yBuffer.get(nv21, 0, ySize)
-        vBuffer.get(nv21, ySize, vSize)
-        uBuffer.get(nv21, ySize + vSize, uSize)
+        val yStride = yPlane.rowStride
+        val uStride = uPlane.rowStride
+        val vStride = vPlane.rowStride
+        val pixelStride = uPlane.pixelStride
+
+        val nv21 = ByteArray(width * height * 3 / 2)
+
+        // 1. Copy Y Plane
+        var idY = 0
+        for (row in 0 until height) {
+            yBuffer.position(row * yStride)
+            // 🔥 SAFETY CHECK: Only read what's left in the buffer
+            val remaining = yBuffer.remaining()
+            val bytesToRead = if (remaining < yStride) remaining else yStride
+
+            val rowData = ByteArray(bytesToRead)
+            yBuffer.get(rowData)
+
+            // Only copy 'width' amount to skip padding
+            System.arraycopy(rowData, 0, nv21, idY, width.coerceAtMost(bytesToRead))
+            idY += width
+        }
+
+        // 2. Copy U/V Planes
+        var idUV = width * height
+        val uvHeight = height / 2
+        val uvWidth = width / 2
+
+        for (row in 0 until uvHeight) {
+            for (col in 0 until uvWidth) {
+                val vPos = row * vStride + col * pixelStride
+                val uPos = row * uStride + col * pixelStride
+
+                // 🔥 SAFETY CHECK: Ensure positions are within buffer limits
+                if (vPos < vBuffer.capacity() && uPos < uBuffer.capacity()) {
+                    nv21[idUV++] = vBuffer.get(vPos)
+                    nv21[idUV++] = uBuffer.get(uPos)
+                }
+            }
+        }
 
         return nv21
-    }
-
-    fun getCorrectedBitmap(bitmap: Bitmap, rotationDegrees: Int, isFrontCamera: Boolean): Bitmap {
+    }    fun getCorrectedBitmap(bitmap: Bitmap, rotationDegrees: Int, isFrontCamera: Boolean): Bitmap {
         val matrix = Matrix()
 
         // 1. Handle Rotation

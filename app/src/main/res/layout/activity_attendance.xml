@@ -52,7 +52,7 @@
             android:id="@+id/tickImage"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="2dp"
             android:contentDescription="@string/app_name"
             android:src="@drawable/check"
             android:visibility="gone" />
@@ -73,15 +73,17 @@
             android:layout_marginBottom="8dp"
             android:text="@string/readyForScan"
             android:textColor="@color/white"
+            android:visibility="gone"
             android:textSize="12sp" />
 
         <TextView
             android:id="@+id/txtName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="10dp"
             android:textColor="@color/white"
             android:textSize="18sp"
+            android:text="pardeep"
             android:textStyle="bold" />
 
         <TextView

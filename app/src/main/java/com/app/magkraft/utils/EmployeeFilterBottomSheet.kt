@@ -18,6 +18,8 @@ class EmployeeFilterBottomSheet(
     private var selectedStatus: Boolean?,
     private val onApply: (groupId: Int?, status: Boolean?) -> Unit
 ) : BottomSheetDialogFragment() {
+    var authPref: AuthPref ?=null
+    var selectedGroup: GroupListModel?=null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,19 +33,36 @@ class EmployeeFilterBottomSheet(
         val btnApply = view.findViewById<Button>(R.id.btnApply)
         val btnClear = view.findViewById<Button>(R.id.btnClear)
 
+        authPref = AuthPref(requireContext())
+
         // --- Group Dropdown ---
         val groupNames = groups.map { it.Name }
         val groupAdapter =
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, groupNames)
         etGroup.setAdapter(groupAdapter)
 
-        var selectedGroup: GroupListModel? = groups.firstOrNull { it.Id == selectedGroupId?.toInt() }
-        etGroup.setText(selectedGroup?.Name ?: "", false)
+        /**
+         * Here we need to check , if group id is not 0 with user type 2, then
+         * set group id to that
+         */
+        if(authPref?.get("userType")=="2"){
+            if(authPref?.get("groupId")!="0"){
+                selectedGroup =
+                    groups.firstOrNull { it.Id == authPref?.get("groupId")?.toInt() }
+                etGroup.setText(groups.firstOrNull{it.Id==authPref?.get("groupId")?.toInt()}?.Name?:"")
+                etGroup.isEnabled = false
+                etGroup.isFocusable = false
+            }
+        }else {
 
-        etGroup.setOnItemClickListener { _, _, position, _ ->
-            selectedGroup = groups[position]
+             selectedGroup =
+                groups.firstOrNull { it.Id == selectedGroupId?.toInt() }
+            etGroup.setText(selectedGroup?.Name ?: "", false)
+
+            etGroup.setOnItemClickListener { _, _, position, _ ->
+                selectedGroup = groups[position]
+            }
         }
-
         // --- Status Dropdown ---
         val statuses = listOf("Active", "Inactive")
         val statusAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, statuses)

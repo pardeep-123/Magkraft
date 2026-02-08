@@ -37,11 +37,17 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.app.magkraft.MainActivity
 import com.app.magkraft.R
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.AttendanceEntity
 import com.app.magkraft.data.local.db.UserEntity
+import com.app.magkraft.isInternetAvailable
 import com.app.magkraft.ml.FaceOverlayView
 
 import com.app.magkraft.ml.FaceRecognizer
@@ -49,6 +55,7 @@ import com.app.magkraft.ml.UltraFastAnalyzer
 import com.app.magkraft.model.CommonResponse
 import com.app.magkraft.network.ApiClient
 import com.app.magkraft.ui.model.EmployeeListModel
+import com.app.magkraft.utils.AttendanceSyncWorker
 import com.app.magkraft.utils.AuthPref
 import com.app.magkraft.utils.EmployeeViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -224,16 +231,39 @@ class AttendanceActivity : BaseActivity() {
         }
     }
 
-    private fun saveAttendance(empId: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val attendance = AttendanceEntity(
-                empId = empId,
-                timestamp = System.currentTimeMillis()
-            )
+//    private fun saveAttendance(empId: String) {
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val attendance = AttendanceEntity(
+//                empId = empId,
+//                timestamp = System.currentTimeMillis()
+//            )
+//
+//            AppDatabase.getDatabase(this@AttendanceActivity)
+//                .attendanceDao()
+//                .insertAttendance(attendance)
+//        }
+//    }
 
-            AppDatabase.getDatabase(this@AttendanceActivity)
-                .attendanceDao()
-                .insertAttendance(attendance)
+    private fun saveAttendance(empId: String) {
+
+        val timestamp = System.currentTimeMillis()
+        val locationId = authPref?.getLocation("locationId").toString()
+
+        val attendance = AttendanceEntity(
+            empId = empId,
+            timestamp = timestamp,
+            locationId = locationId,
+            isSynced = false
+        )
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val db = AppDatabase.getDatabase(this@AttendanceActivity)
+            db.attendanceDao().insertAttendance(attendance)
+
+            // 🔥 Try sync immediately if internet exists
+                enqueueAttendanceSyncWorker()
+
         }
     }
 
@@ -313,7 +343,14 @@ class AttendanceActivity : BaseActivity() {
 
                 // ✅ Allow attendance
                 withContext(Dispatchers.Main) {
-                    markAttendance(result)
+                   // markAttendance(result)
+                    txtStatus.text = "Attendance marked for ${result.name}"
+//                    txtReady.visibility = View.GONE
+                    txtName.text = "Designation: ${result.designation}"
+                    txtName.visibility = View.VISIBLE
+                    tickImage.visibility = View.VISIBLE
+                    saveAttendance(result.empId)
+                    delayAndReset(3000)
                 }
             }
         }
@@ -340,9 +377,9 @@ class AttendanceActivity : BaseActivity() {
     }
 
 
-    private fun markAttendance(empId: UserEntity) {
+        private fun markAttendance(empId: UserEntity) {
 
-        showLoader()
+       // showLoader()
         val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
         val call = ApiClient.apiService.markAttendance(
@@ -357,17 +394,17 @@ class AttendanceActivity : BaseActivity() {
                 call: Call<CommonResponse>,
                 response: Response<CommonResponse>
             ) {
-                hideLoader()
+               // hideLoader()
 
                 if (response.isSuccessful && response.body() != null) {
 
-                    txtStatus.text = "Attendance marked for ${empId.name}"
-//                    txtReady.visibility = View.GONE
-                    txtName.text = "Designation: ${empId.designation}"
-                    txtName.visibility = View.VISIBLE
-                    tickImage.visibility = View.VISIBLE
-                    saveAttendance(empId.empId)
-                    delayAndReset(3000)
+//                    txtStatus.text = "Attendance marked for ${empId.name}"
+////                    txtReady.visibility = View.GONE
+//                    txtName.text = "Designation: ${empId.designation}"
+//                    txtName.visibility = View.VISIBLE
+//                    tickImage.visibility = View.VISIBLE
+//                    saveAttendance(empId.empId)
+//                    delayAndReset(3000)
 
                 } else {
                     Toast.makeText(
@@ -395,4 +432,24 @@ class AttendanceActivity : BaseActivity() {
             resetUI()
         }, ms)
     }
+
+    private fun enqueueAttendanceSyncWorker() {
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<AttendanceSyncWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniqueWork(
+                "attendance_sync",
+                ExistingWorkPolicy.KEEP,
+                workRequest
+            )
+    }
+
+
 }

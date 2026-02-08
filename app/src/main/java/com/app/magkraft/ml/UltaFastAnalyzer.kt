@@ -5,6 +5,7 @@ import android.graphics.Matrix
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.app.magkraft.data.local.db.UserEntity
@@ -21,8 +22,10 @@ class UltraFastAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     private var lastMatchTime = 0L
-    private val COOLDOWN_MS = 3000L
-
+    private var isBlinked = false
+    private var hasMovement = false
+    private var lastEyeOpenProb = -1.0f
+    private var lastHeadEulerY = 0f // Track left/right head turn
     private var isProcessing = false
 
     /**
@@ -33,6 +36,7 @@ class UltraFastAnalyzer(
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL) // Enables blinks
             .build()
     )
 
@@ -45,6 +49,9 @@ class UltraFastAnalyzer(
             .addOnSuccessListener { faces ->
                 if (faces.isEmpty()) {
                     faceOverlay.setDynamicRect(null, 0, 0)
+                    // Reset liveness when no face is seen
+                    isBlinked = false
+                    hasMovement = false
                     imageProxy.close()
                     return@addOnSuccessListener
                 }
@@ -55,6 +62,34 @@ class UltraFastAnalyzer(
 
                 // 1. Fix the UI Overlay: Pass raw sensor dimensions
                 faceOverlay.setDynamicRect(face.boundingBox, sensorWidth, sensorHeight)
+
+                // --- START LIVENESS CHECK ---
+//                val leftEye = face.leftEyeOpenProbability ?: -1.0f
+//                val rightEye = face.rightEyeOpenProbability ?: -1.0f
+//                val currentEulerY = face.headEulerAngleY // Left/Right turn
+//
+//                // 1. Detect Blink: Eyes go from OPEN (>0.8) to CLOSED (<0.2)
+//                if (lastEyeOpenProb > 0.8f && (leftEye < 0.2f || rightEye < 0.2f)) {
+//                    isBlinked = true
+//                }
+//                lastEyeOpenProb = leftEye
+//
+//                // 2. Detect Small Head Movement (Prevents 2D Photo Spoofing)
+//                if (Math.abs(currentEulerY - lastHeadEulerY) > 2.0f) {
+//                    hasMovement = true
+//                }
+//                lastHeadEulerY = currentEulerY
+//
+//                // 3. Validation Logic
+//                if (!isBlinked) {
+////                    Handler(Looper.getMainLooper()).post {
+////                        Handler(Looper.getMainLoop er()).post {
+////                            Toast.makeText(context, "Please blink your eyes to verify", Toast.LENGTH_SHORT).show()
+////                        }                    }
+//                    imageProxy.close()
+//                    return@addOnSuccessListener
+//                }
+//                // --- END LIVENESS CHECK ---
 
                 if (!isProcessing && (System.currentTimeMillis() - lastMatchTime > 1000)) {
                     isProcessing = true
@@ -119,6 +154,7 @@ class UltraFastAnalyzer(
                             if (match != null) {
                                 lastMatchTime = System.currentTimeMillis()
                                 Handler(Looper.getMainLooper()).post {
+                                    isBlinked = false
                                     faceOverlay.updateFaceStatus(true)
                                     onMatch(match)
                                 }

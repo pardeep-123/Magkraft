@@ -1,5 +1,8 @@
 package com.app.magkraft
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Base64
 import android.util.Log
 import java.nio.ByteBuffer
@@ -29,3 +32,9 @@ fun base64ToFloatArray(base64: String): FloatArray {
     }
 }
 
+fun Context.isInternetAvailable(): Boolean {
+    val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = cm.activeNetwork ?: return false
+    val capabilities = cm.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}

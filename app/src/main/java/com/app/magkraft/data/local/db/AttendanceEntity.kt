@@ -8,5 +8,8 @@ data class AttendanceEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val empId: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val locationId: String,
+    val isSynced: Boolean = false
+
 )

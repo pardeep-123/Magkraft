@@ -7,8 +7,8 @@
     <string name="already_have_an_account">Already have an account?</string>
     <string name="register">Register</string>
     <string name="hello_nsign_in">Hello\nSign in!</string>
-    <string name="email">Email</string>
-    <string name="enter_email">Enter email</string>
+    <string name="email">UserName</string>
+    <string name="enter_email">Enter UserName</string>
     <string name="enter_password">Enter password</string>
     <string name="enter_confirm_password">Enter confirm password</string>
     <string name="password">Password</string>

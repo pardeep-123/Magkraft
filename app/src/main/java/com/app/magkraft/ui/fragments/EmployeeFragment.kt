@@ -139,7 +139,13 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
                 if (response.isSuccessful && response.body() != null) {
                     employeeList.clear()
                     employeeList.addAll(response.body()!!)
-                    adapter.submitList(employeeList)
+
+                    // show only active users initially
+                    val activeList = employeeList.filter { it.IsActive }
+
+                    adapter.submitList(activeList)
+
+//                    adapter.submitList(employeeList)
 
                 } else {
 //                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
@@ -241,16 +247,19 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
     }
 
     private var selectedGroupId: Int? = null
-    private var selectedStatus: Boolean? = null
+    private var selectedStatus = false
+    private var searchName = ""
 
     private fun openFilterBottomSheet() {
         EmployeeFilterBottomSheet(
             groups = groupList,
             selectedGroupId = selectedGroupId,
-            selectedStatus = selectedStatus
-        ) { groupId, status ->
+            selectedStatus = selectedStatus,
+            searchedName = searchName
+        ) { groupId, status,name ->
             selectedGroupId = groupId
             selectedStatus = status
+            searchName = name
             applyFilters()
         }.show(parentFragmentManager, "EmployeeFilter")
     }
@@ -258,8 +267,15 @@ class EmployeeFragment : Fragment(R.layout.fragment_employee) {
     private fun applyFilters() {
         val filtered = employeeList.filter { emp ->
             val groupMatch = selectedGroupId == null || emp.GroupId == selectedGroupId
-            val statusMatch = selectedStatus == null || emp.IsActive == selectedStatus
-            groupMatch && statusMatch
+//            val statusMatch = selectedStatus == null || emp.IsActive == selectedStatus
+            val statusMatch = if (selectedStatus == true) {
+                true
+            } else {
+                emp.IsActive == true
+            }
+            val nameMatch = searchName.isNullOrEmpty() ||
+                    emp.Name.contains(searchName!!, ignoreCase = true)
+            groupMatch && statusMatch && nameMatch
         }
 
         adapter.submitList(filtered)

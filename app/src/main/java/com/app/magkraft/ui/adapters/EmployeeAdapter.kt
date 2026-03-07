@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.R
 import com.app.magkraft.ui.model.EmployeeListModel
@@ -44,11 +45,17 @@ class EmployeeAdapter(
             itemView.findViewById<TextView>(R.id.txtStatus).text =
                 if (item.IsActive) "Active" else "InActive"
             if (item.IsActive)
-                itemView.findViewById<TextView>(R.id.txtStatus)
-                    .setTextColor(ctx.getColor(R.color.green))
+//                itemView.findViewById<TextView>(R.id.txtStatus)
+//                    .setTextColor(ctx.getColor(R.color.green))
+                itemView.setBackgroundColor(
+                    ContextCompat.getColor(itemView.context, android.R.color.white)
+                )
             else
-                itemView.findViewById<TextView>(R.id.txtStatus)
-                    .setTextColor(ctx.getColor(R.color.red_color))
+                itemView.setBackgroundColor(
+                    ContextCompat.getColor(itemView.context, android.R.color.darker_gray)
+                )
+//                itemView.findViewById<TextView>(R.id.txtStatus)
+//                    .setTextColor(ctx.getColor(R.color.red_color))
             itemView.findViewById<ImageView>(R.id.btnEdit).setOnClickListener {
                 onEdit(item)
             }

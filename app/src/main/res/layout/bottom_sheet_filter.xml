@@ -13,40 +13,63 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginHorizontal="@dimen/_13sdp"
+        android:background="@drawable/bg_grid_item"
+        android:gravity="center_vertical"
+        android:hint="Search By Name"
+        android:textSize="@dimen/_12ssp"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:padding="15dp" />
 
     <!-- Group Dropdown -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Select Group"
+        app:hintTextColor="@color/light_gray"
         android:layout_marginHorizontal="@dimen/_5sdp"
-        android:padding="10dp"
+        android:paddingHorizontal="10dp"
+        android:paddingTop="10dp"
         app:endIconMode="dropdown_menu">
 
         <AutoCompleteTextView
             android:id="@+id/etGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_grid_item"
             android:padding="@dimen/_10sdp"
             android:inputType="none"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Group Dropdown -->
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Select Status"
-        android:layout_marginHorizontal="@dimen/_5sdp"
-        android:padding="10dp"
-        app:endIconMode="dropdown_menu">
+<!--    <com.google.android.material.textfield.TextInputLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:hint="Select Status"-->
+<!--        android:layout_marginHorizontal="@dimen/_5sdp"-->
+<!--        android:padding="10dp"-->
+<!--        app:endIconMode="dropdown_menu">-->
 
-        <AutoCompleteTextView
-            android:id="@+id/etStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/_10sdp"
-            android:inputType="none"/>
-    </com.google.android.material.textfield.TextInputLayout>
+<!--        <AutoCompleteTextView-->
+<!--            android:id="@+id/etStatus"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:padding="@dimen/_10sdp"-->
+<!--            android:inputType="none"/>-->
+<!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <CheckBox
+        android:id="@+id/checkBoxTerms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="In-Active Users"
+        android:layout_margin="6dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -63,7 +86,7 @@
 android:backgroundTint="@color/mid_color"
         android:textColor="@color/dark"
         android:layout_marginHorizontal="@dimen/_15sdp"
-        android:layout_marginTop="16dp"/>
+        />
 
     <Button
         android:id="@+id/btnClear"
@@ -71,7 +94,6 @@ android:backgroundTint="@color/mid_color"
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:textColor="@color/dark"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="@dimen/_15sdp"
         android:backgroundTint="@color/mid_color"
         android:text="Clear"/>

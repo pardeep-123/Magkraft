@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:background="@color/white"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -18,14 +19,14 @@
             android:textSize="16sp"
             android:text="Name"
             android:layout_width="0dp"
-            android:layout_weight="0.3"
+            android:layout_weight="0.5"
             android:layout_marginStart="@dimen/_5sdp"
             android:textStyle="bold" />
         <TextView
             android:id="@+id/txtEmployeeId"
             android:layout_height="wrap_content"
             android:layout_width="0dp"
-            android:layout_weight="0.22"
+            android:layout_weight="0.27"
             android:text="Code"
             android:textStyle="bold"
             android:textSize="16sp" />
@@ -36,7 +37,7 @@
             android:text="Status"
             android:textStyle="bold"
             android:layout_height="wrap_content"
-
+android:visibility="gone"
             android:layout_weight="0.25"
             android:textSize="16sp"
             />
@@ -49,7 +50,7 @@
             android:textStyle="bold"
             android:layout_height="wrap_content"
 
-            android:layout_weight="0.2"
+            android:layout_weight="0.25"
             android:textSize="16sp"
             />
     </LinearLayout>
@@ -61,8 +62,10 @@
         android:layout_height="match_parent"
         android:paddingBottom="?attr/actionBarSize"
         android:clipToPadding="false"
+
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-  android:layout_marginTop="@dimen/_20sdp"
+  android:layout_marginTop="@dimen/_25sdp"
+        android:layout_marginBottom="@dimen/_70sdp"
         android:padding="12dp"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

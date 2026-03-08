@@ -215,15 +215,16 @@ class AttendanceActivity : BaseActivity() {
         return when (item.itemId) {
 
             R.id.action_switch_admin -> {
-                if (authPref?.isLoggedIn() == true) {
-                    startActivity(
-                        Intent(this@AttendanceActivity, MainActivity::class.java)
-                    )
-                } else {
+//                if (authPref?.isLoggedIn() == true) {
+//                    startActivity(
+//                        Intent(this@AttendanceActivity, MainActivity::class.java)
+//                    )
+//                } else {
                     startActivity(
                         Intent(this, LoginActivity::class.java)
                     )
-                }
+              //  }
+                authPref?.putRole("role","2")
                 true
             }
 

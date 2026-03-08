@@ -3,10 +3,14 @@ package com.app.magkraft.ui
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.app.magkraft.MainActivity
@@ -31,6 +35,8 @@ class LoginActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_login)
+        val toolbar = findViewById<Toolbar>(R.id.toolbarLogin)
+        setSupportActionBar(toolbar)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.loginMain)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -50,8 +56,43 @@ class LoginActivity : BaseActivity() {
 
         }
         authPref = AuthPref(this)
+
+        // Set white overflow icon
+        toolbar.overflowIcon =
+            ContextCompat.getDrawable(this, R.drawable.more)?.apply {
+                setTint(ContextCompat.getColor(this@LoginActivity, android.R.color.black))
+            }
+
+        supportActionBar?.setDisplayShowTitleEnabled(false)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_toolbar_login, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+
+            R.id.action_switch_normal -> {
+//                if (authPref?.isLoggedIn() == true) {
+//                    startActivity(
+//                        Intent(this@AttendanceActivity, MainActivity::class.java)
+//                    )
+//                } else {
+                startActivity(
+                    Intent(this, AttendanceActivity::class.java)
+                )
+                authPref?.putRole("role","1")
+                finishAffinity()
+
+                //  }
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 
     private fun login(email: String, password: String) {
 

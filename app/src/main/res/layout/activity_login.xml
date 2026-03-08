@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/loginMain">
-
+        <include layout="@layout/layout_toolbar_login" />
 
         <TextView
             android:id="@+id/titleTV"
@@ -70,7 +70,6 @@
                     android:hint="@string/enter_email"
                     android:background="@null"
                     android:maxLength="40"
-
                     style="@style/styleTextInputEditText"
                     android:fontFamily="sans-serif"
                     android:inputType="textPersonName" />
@@ -148,4 +147,5 @@
 
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.core.widget.NestedScrollView>

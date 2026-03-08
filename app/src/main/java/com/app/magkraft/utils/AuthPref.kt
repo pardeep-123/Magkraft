@@ -49,4 +49,13 @@ class AuthPref(context: Context) {
     fun getLocation(key: String, default: String = ""): String {
         return prefsLocation.getString(key, default) ?: default
     }
+
+    fun putRole(key: String, value: String) {
+        prefsLocation.edit().putString(key, value).apply()
+    }
+
+    fun getRole(key: String, default: String = ""): String {
+        return prefsLocation.getString(key, default) ?: default
+    }
+
 }

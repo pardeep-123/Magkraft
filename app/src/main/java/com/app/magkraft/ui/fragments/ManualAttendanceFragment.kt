@@ -1,6 +1,7 @@
 package com.app.magkraft.ui.fragments
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
@@ -53,6 +54,7 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
     lateinit var etGroup: EditText
     lateinit var etEmployee: EditText
     lateinit var etLocation: EditText
+    lateinit var etDateTime: EditText
 //    lateinit var placeholder: TextView
     lateinit var btnSave: Button
 //    lateinit var progressBar: ProgressBar
@@ -79,6 +81,7 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
         etGroup = view.findViewById(R.id.etGroup)
         etEmployee = view.findViewById(R.id.etEmployee)
         etLocation = view.findViewById(R.id.etLocation)
+        etDateTime = view.findViewById(R.id.etDateTime)
         btnSave = view.findViewById(R.id.btnSave)
         authPref = AuthPref(ctx!!)
         getGroups()
@@ -88,6 +91,12 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
 
                 etGroup.setText(it.Name)
                 groupId = it.Id.toString()
+
+                etEmployee.setText("")
+                employeeId = ""
+
+                etLocation.setText("")
+                locationId = ""
 
                 CoroutineScope(Dispatchers.Main).launch {
                     getLocationList(it.Id)
@@ -120,12 +129,45 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
 
             }
         }
+        etDateTime.setOnClickListener {
 
+            val calendar = Calendar.getInstance()
+
+            DatePickerDialog(
+                ctx!!,
+                { _, year, month, day ->
+
+                    TimePickerDialog(
+                        ctx!!,
+                        { _, hour, minute ->
+
+                            val selectedCalendar = Calendar.getInstance()
+                            selectedCalendar.set(year, month, day, hour, minute, 0)
+
+                            val format =
+                                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                            val formattedDate = format.format(selectedCalendar.time)
+
+                            etDateTime.setText(formattedDate)
+
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        true
+                    ).show()
+
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
         btnSave.setOnClickListener {
 
             if (etGroup.text.isNullOrEmpty() ||
                 etEmployee.text.isNullOrEmpty() ||
-                etLocation.text.isNullOrEmpty()
+                etLocation.text.isNullOrEmpty() ||
+                etDateTime.text.isNullOrEmpty()
             ) {
 
                 Toast.makeText(
@@ -343,7 +385,8 @@ class ManualAttendanceFragment : Fragment(R.layout.fragment_manual_attendance) {
     private fun markAttendance() {
 
         (ctx as MainActivity). showLoader()
-        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+//        val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        val now = etDateTime.text.toString()
 
         val call = ApiClient.apiService.markAttendance(
             employeeId,

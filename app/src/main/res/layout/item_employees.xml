@@ -31,12 +31,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="1">
-
+                <TextView
+                    android:id="@+id/txtSr"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.15"
+                    android:text="1"
+                    android:textColor="@color/black"
+                    android:textSize="13sp" />
                 <TextView
                     android:id="@+id/txtEmployeeName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.65"
+                    android:layout_weight="0.53"
                     android:text="pardeep"
                     android:textColor="@color/black"
                     android:textSize="13sp" />

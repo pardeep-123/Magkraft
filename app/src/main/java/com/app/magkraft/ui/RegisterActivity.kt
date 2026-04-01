@@ -1,23 +1,18 @@
 package com.app.magkraft.ui
 
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.graphics.Rect
-import android.graphics.RectF
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -26,30 +21,28 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.app.magkraft.MainActivity
 import com.app.magkraft.R
+import com.app.magkraft.base64ToBitmap
+import com.app.magkraft.bitmapToBase64
 import com.app.magkraft.data.local.db.AppDatabase
 import com.app.magkraft.data.local.db.UserDao
-import com.app.magkraft.data.local.db.UserEntity
 import com.app.magkraft.floatArrayToBase64
 import com.app.magkraft.ml.FaceOverlayView
 import com.app.magkraft.ml.FaceRecognizer
 import com.app.magkraft.ml.RegisterAnalyzer
-import com.app.magkraft.model.AddGroupModel
 import com.app.magkraft.model.CommonResponse
+import com.app.magkraft.model.GetImageModel
 import com.app.magkraft.network.ApiClient
 import com.app.magkraft.ui.adapters.GroupPopupAdapter
-import com.app.magkraft.ui.adapters.LocationPopupAdapter
+import com.app.magkraft.ui.fragments.HomeFragment
 import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
 import com.app.magkraft.ui.model.LocationListModel
@@ -64,10 +57,10 @@ import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.ByteArrayOutputStream
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import kotlin.getValue
 
 class RegisterActivity : BaseActivity() {
 
@@ -83,6 +76,8 @@ class RegisterActivity : BaseActivity() {
     private lateinit var etDesignation: EditText
     private lateinit var ivFace: ImageView
     private var isImageCaptured = false
+
+    private var base64Image = ""
 
     private lateinit var previewContainer: View
     private lateinit var previewView: PreviewView
@@ -305,6 +300,10 @@ class RegisterActivity : BaseActivity() {
             getGroups()
         }
 
+        CoroutineScope(Dispatchers.Main).launch {
+            getImage()
+        }
+
 
     }
 
@@ -485,6 +484,8 @@ class RegisterActivity : BaseActivity() {
             // 5. Standardize to 112x112 for matching
             val finalFace = Bitmap.createScaledBitmap(croppedFace, 112, 112, true)
 
+             base64Image = bitmapToBase64(finalFace)
+
             ivFace.setImageBitmap(finalFace)
             ImageUtils.saveBitmapToDisk(this, finalFace, "register_face")
             processFinalFace(finalFace)
@@ -538,7 +539,8 @@ class RegisterActivity : BaseActivity() {
 //                locationId,
                 status,
                 "0",
-                image
+                image,
+                base64Image
 
             )
         } else {
@@ -551,7 +553,8 @@ class RegisterActivity : BaseActivity() {
                 status,
                 "0",
                 image,
-                employeeId
+                employeeId,
+                base64Image
 
             )
         }
@@ -741,7 +744,51 @@ class RegisterActivity : BaseActivity() {
 //    }
 
 
+    private fun getImage() {
 
+        showLoader()
+
+        val call = ApiClient.apiService.getEmpImage(
+            employeeId)
+
+        call.enqueue(object : Callback<GetImageModel> {
+
+            override fun onResponse(
+                call: Call<GetImageModel>,
+                response: Response<GetImageModel>
+            ) {
+                hideLoader()
+
+//                if (response.isSuccessful && response.body() != null) {
+//                    ivFace.setImageBitmap(base64ToBitmap(response.body()!!.PhotoMain.Photo1))
+//
+//                } else {
+////                    val errorMessage = (ctx as MainActivity).getErrorMessage(response)
+////                    Toast.makeText(
+////                        this@RegisterActivity,
+////                        response.body()?.message.toString(),
+////                        Toast.LENGTH_SHORT
+////                    )
+////                        .show()
+//
+//                }
+
+                val base64 = response.body()?.Photo1?.Photo1
+
+                if (!base64.isNullOrEmpty()) {
+                    ivFace.setImageBitmap(base64ToBitmap(base64))
+                } else {
+                    // handle empty image
+                  //  ivFace.setImageResource(R.drawable.placeholder)
+                }
+            }
+
+            override fun onFailure(call: Call<GetImageModel>, t: Throwable) {
+                hideLoader()
+
+            }
+        })
+    }
 
 
 }

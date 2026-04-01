@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.app.magkraft.MainActivity
 import com.app.magkraft.R
 import com.app.magkraft.utils.AuthPref
 
@@ -32,11 +33,19 @@ class SplashActivity : AppCompatActivity() {
                 )
 
             } else {
-
+                if (authPref?.isLoggedIn() == true) {
+                    startActivity(
+                        Intent(this@SplashActivity, MainActivity::class.java)
+                    )
+                } else {
+                    startActivity(
+                        Intent(this, LoginActivity::class.java)
+                    )
+                }
                 // User not logged in
-                startActivity(
-                    Intent(this, LoginActivity::class.java)
-                )
+//                startActivity(
+//                    Intent(this, LoginActivity::class.java)
+//                )
             }
 
             finish()

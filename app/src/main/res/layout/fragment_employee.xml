@@ -13,13 +13,23 @@
         android:orientation="horizontal"
         android:padding="10dp">
         <TextView
+            android:id="@+id/txtSr."
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:text="Sr."
+            android:layout_width="0dp"
+            android:layout_weight="0.15"
+            android:layout_marginStart="@dimen/_5sdp"
+            android:textStyle="bold" />
+        <TextView
             android:id="@+id/txtEmployeeName"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
             android:textSize="16sp"
             android:text="Name"
             android:layout_width="0dp"
-            android:layout_weight="0.5"
+            android:layout_weight="0.38"
             android:layout_marginStart="@dimen/_5sdp"
             android:textStyle="bold" />
         <TextView
@@ -44,15 +54,14 @@ android:visibility="gone"
 
         <TextView
             android:id="@+id/txtOther"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.25"
             android:gravity="center"
             android:text="Others"
-            android:textStyle="bold"
-            android:layout_height="wrap_content"
-
-            android:layout_weight="0.25"
             android:textSize="16sp"
-            />
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
 
 

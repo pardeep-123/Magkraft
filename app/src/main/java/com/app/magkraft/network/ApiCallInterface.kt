@@ -4,6 +4,7 @@ package com.app.magkraft.network
 import com.app.magkraft.model.AddGroupModel
 import com.app.magkraft.model.AddLocationModel
 import com.app.magkraft.model.CommonResponse
+import com.app.magkraft.model.GetImageModel
 import com.app.magkraft.model.LoginSignupModel
 import com.app.magkraft.ui.model.EmployeeListModel
 import com.app.magkraft.ui.model.GroupListModel
@@ -101,6 +102,7 @@ interface ApiCallInterface {
         @Field("IsActive") isActive: String,
         @Field("IsDeleted") isDeleted: String,
         @Field("Photo") image: String,
+        @Field("Photo1") imageActual: String,
     ): Call<CommonResponse>
 
     @GET(Constants.getemployees)
@@ -118,6 +120,7 @@ interface ApiCallInterface {
         @Field("IsDeleted") isDeleted: String,
         @Field("Photo") image: String,
         @Field("Id") id: String,
+        @Field("Photo1") imageActual: String,
     ): Call<CommonResponse>
 
     /// Delete Group
@@ -153,5 +156,11 @@ interface ApiCallInterface {
         @Field("Month") month: String,
         @Field("Year") year: String
     ): Call<List<ViewReportsModelItem>>
+
+    @FormUrlEncoded
+    @POST(Constants.getempImage)
+    fun getEmpImage(
+        @Field("Id") employeeId: String,
+    ): Call<GetImageModel>
 
 }

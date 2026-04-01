@@ -114,6 +114,9 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                 etGroup.setText(it.Name)
                 groupId = it.Id.toString()
 
+                etEmployee.setText("")
+                employeeId = ""
+                etMonth.setText("")
                 CoroutineScope(Dispatchers.Main).launch {
                     getEmployeeList()
                 }

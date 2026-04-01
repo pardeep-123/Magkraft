@@ -9,3 +9,7 @@ package com.app.magkraft.ui.model
         val Name: String,
         val TimeStamp: String
     )
+
+//data class GetImageModelItem(
+//    val Photo1: String,
+//)

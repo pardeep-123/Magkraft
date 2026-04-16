@@ -39,7 +39,8 @@ class ViewReportsAdapter() : RecyclerView.Adapter<ViewReportsAdapter.GroupVH>() 
             itemView.findViewById<TextView>(R.id.txtEmployeeName).text = item.Name
             itemView.findViewById<TextView>(R.id.txtEmployeeId).text =  item.Code
 //            itemView.findViewById<TextView>(R.id.groupId).text = "Location Id: " + item.LocationId
-            itemView.findViewById<TextView>(R.id.timeStamp).text =  item.TimeStamp
+            itemView.findViewById<TextView>(R.id.inTime).text =  item.InTime
+            itemView.findViewById<TextView>(R.id.outTime).text =  item.OutTime
 
 
         }

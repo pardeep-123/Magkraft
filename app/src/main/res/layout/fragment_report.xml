@@ -121,7 +121,7 @@
             <Button
                 android:id="@+id/btnViewReport"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_weight="1"
                 android:text="View Report"
@@ -130,12 +130,23 @@
             <Button
                 android:id="@+id/downloadReport"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_marginStart="@dimen/_5sdp"
-                android:layout_weight="0.5"
+                android:layout_weight="0.33"
                 android:visibility="gone"
                 android:text="Download Report"
+                android:textColor="@color/dark" />
+
+            <Button
+                android:id="@+id/downloadExcel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginStart="@dimen/_5sdp"
+                android:layout_weight="0.33"
+                android:visibility="gone"
+                android:text="Download Excel"
                 android:textColor="@color/dark" />
 
         </LinearLayout>
@@ -194,7 +205,7 @@
                     android:textSize="16sp"
                     android:text="Name"
                     android:layout_width="0dp"
-                    android:layout_weight="0.3"
+                    android:layout_weight="0.25"
 
                     android:textStyle="bold" />
                 <TextView
@@ -210,11 +221,22 @@
                     android:id="@+id/txtStatus"
                     android:layout_width="0dp"
                     android:gravity="center"
-                    android:text="Time"
+                    android:text="In-Time"
                     android:textStyle="bold"
                     android:layout_height="wrap_content"
 
-                    android:layout_weight="0.45"
+                    android:layout_weight="0.25"
+                    android:textSize="16sp"
+                    />
+                <TextView
+                    android:id="@+id/txtStatus1"
+                    android:layout_width="0dp"
+                    android:gravity="center"
+                    android:text="Out-Time"
+                    android:textStyle="bold"
+                    android:layout_height="wrap_content"
+
+                    android:layout_weight="0.25"
                     android:textSize="16sp"
                     />
 

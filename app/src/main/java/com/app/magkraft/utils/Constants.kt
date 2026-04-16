@@ -21,8 +21,9 @@ object Constants {
 
     const val getemployeesbygroupid = "getemployeesbygroupid"
     const val addemplog = "addemplog"
-    const val getemplog = "getemplog"
+    const val getemplog = "getemploglist"
     const val getempImage = "getempimage"
+    const val downloademploglist = "downloademploglist"
 
 
 }

@@ -7,7 +7,9 @@ package com.app.magkraft.ui.model
         val Id: Int,
         val LocationId: Int,
         val Name: String,
-        val TimeStamp: String
+        val TimeStamp: String,
+        val InTime: String,
+        val OutTime: String
     )
 
 //data class GetImageModelItem(

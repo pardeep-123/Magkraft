@@ -18,7 +18,7 @@
             android:id="@+id/txtEmployeeName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.38"
+            android:layout_weight="0.35"
             android:gravity="start"
             android:textColor="@color/black"
             android:textSize="13sp" />
@@ -27,7 +27,7 @@
             android:id="@+id/txtEmployeeId"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.32"
+            android:layout_weight="0.20"
             android:gravity="start"
             android:textSize="13sp" />
 
@@ -41,11 +41,20 @@
             android:visibility="gone" />
 
         <TextView
-            android:id="@+id/timeStamp"
+            android:id="@+id/inTime"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="1dp"
-            android:layout_weight="0.3"
+            android:layout_weight="0.25"
+            android:text=""
+            android:gravity="start"
+            android:textSize="13sp" />
+        <TextView
+            android:id="@+id/outTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:layout_weight="0.20"
             android:text=""
             android:gravity="start"
             android:textSize="13sp" />

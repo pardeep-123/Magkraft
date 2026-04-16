@@ -12,6 +12,7 @@ import com.app.magkraft.ui.model.LocationListModel
 import com.app.magkraft.ui.model.ViewReportsModelItem
 import com.app.magkraft.utils.Constants
 import okhttp3.Response
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -162,5 +163,13 @@ interface ApiCallInterface {
     fun getEmpImage(
         @Field("Id") employeeId: String,
     ): Call<GetImageModel>
+
+    @FormUrlEncoded
+    @POST(Constants.downloademploglist)
+    fun downloadExcel(
+        @Field("EmployeeId") employeeId: String,
+        @Field("Month") month: String,
+        @Field("Year") year: String
+    ): Call<ResponseBody>
 
 }

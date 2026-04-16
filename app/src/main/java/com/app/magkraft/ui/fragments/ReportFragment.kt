@@ -39,6 +39,7 @@ import com.app.magkraft.utils.AuthPref
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -56,6 +57,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
     lateinit var placeholder: TextView
     lateinit var btnViewReport: Button
     lateinit var btnDownloadReport: Button
+    lateinit var btnDownloadExcel : Button
     lateinit var layoutEmpty: LinearLayout
     lateinit var progressBar: ProgressBar
     lateinit var rvReport: RecyclerView
@@ -92,6 +94,7 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         rvReport = view.findViewById(R.id.rvReport)
         placeholder = view.findViewById(R.id.placeholder)
         btnDownloadReport = view.findViewById(R.id.downloadReport)
+        btnDownloadExcel = view.findViewById(R.id.downloadExcel)
         authPref = AuthPref(ctx!!)
         getGroups()
 
@@ -153,6 +156,10 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
 
         btnDownloadReport.setOnClickListener {
             downloadCsv(employeeReportsList)
+        }
+
+        btnDownloadExcel.setOnClickListener {
+            downloadExcel()
         }
     }
 
@@ -377,6 +384,30 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
         })
     }
 
+    private fun downloadExcel(){
+        (ctx as MainActivity).showLoader()
+
+        val call = ApiClient.apiService.downloadExcel(employeeId, month, year)
+    call .enqueue(object : Callback<ResponseBody> {
+        @RequiresApi(Build.VERSION_CODES.Q)
+        override fun onResponse(
+            call: Call<ResponseBody>,
+            response: Response<ResponseBody>
+        ) {
+            (ctx as MainActivity).hideLoader()
+            if (response.isSuccessful && response.body() != null) {
+                downloadExcelFile(response.body()!!)
+            } else {
+                Toast.makeText(context, "Download failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+            Toast.makeText(context, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+        }
+    })
+    }
+
     private fun getEmployeesReports() {
 
         (ctx as MainActivity).showLoader()
@@ -399,13 +430,15 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
                     placeholder.visibility = View.GONE
                     if(employeeReportsList.isNotEmpty()){
                         btnDownloadReport.visibility = View.VISIBLE
+                        btnDownloadExcel.visibility = View.VISIBLE
                         layoutEmpty.visibility = View.VISIBLE
                         val params = btnViewReport.layoutParams as LinearLayout.LayoutParams
-                        params.weight = 0.5f
+                        params.weight = 0.35f
                         btnViewReport.layoutParams = params
 
                     }else{
                         btnDownloadReport.visibility = View.GONE
+                        btnDownloadExcel.visibility = View.GONE
                         layoutEmpty.visibility = View.GONE
                         val params = btnViewReport.layoutParams as LinearLayout.LayoutParams
                         params.weight = 1f
@@ -443,24 +476,24 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
 
             resolver.openOutputStream(uri)?.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
-                    writer.append("Name,Code,TimeStamp\n") // CSV header
+                    writer.append("Name,Code,InTime,OutTime\n") // CSV header
 
                     list.forEach { emp ->
-                        writer.append("${emp.Name},${emp.Code},${emp.TimeStamp}}\n")
+                        writer.append("${emp.Name},${emp.Code},${emp.InTime},${emp.OutTime}}\n")
                     }
 
 //                    writer.flush()
                 }
             }
 
-        // ✅ Mark file as complete (VISIBLE IN FILE MANAGER)
+        //  Mark file as complete (VISIBLE IN FILE MANAGER)
         contentValues.clear()
         contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
         resolver.update(uri, contentValues, null, null)
 
             Toast.makeText(requireContext(), "Saved to Downloads: $fileName", Toast.LENGTH_SHORT).show()
 
-        // ✅ Open file
+        //  Open file
         val openIntent = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, "text/csv")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -469,4 +502,48 @@ class ReportFragment : Fragment(R.layout.fragment_report) {
 
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun downloadExcelFile(responseBody: ResponseBody) {
+        val fileName = "employees_${System.currentTimeMillis()}.xlsx"
+
+        val resolver = requireContext().contentResolver
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(
+                MediaStore.MediaColumns.MIME_TYPE,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            ?: return
+
+        resolver.openOutputStream(uri)?.use { outputStream ->
+            responseBody.byteStream().use { inputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+
+        // Mark complete
+        contentValues.clear()
+        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+        resolver.update(uri, contentValues, null, null)
+
+        Toast.makeText(requireContext(), "Excel saved: $fileName", Toast.LENGTH_SHORT).show()
+
+        // Open file
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(
+                uri,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(intent, "Open Excel"))
+    }
 }

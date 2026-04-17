@@ -19,6 +19,9 @@
     <item android:id="@+id/mark_attendance"
         android:title="Manual Attendance" />
 
+    <item android:id="@+id/download_apk"
+        android:title="Download New Apk" />
+
     <item android:id="@+id/menu_logout"
         android:title="Logout" />
 

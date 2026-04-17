@@ -1,11 +1,14 @@
 package com.app.magkraft
 
 import android.app.Dialog
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.Menu
 import android.view.MenuItem
 import android.view.Window
@@ -100,6 +103,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_report -> { loadFragment(ReportFragment(), "Reports"); true }
             R.id.mark_attendance -> { loadFragment(ManualAttendanceFragment(), "Manual Attendance"); true }
             R.id.menu_logout -> { showLogoutDialog(this); true }
+            R.id.download_apk -> { showLogoutDialog(this); true }
             else -> super.onOptionsItemSelected(item) // ⭐ THIS LINE IS KEY
         }
     }
@@ -145,6 +149,26 @@ class MainActivity : AppCompatActivity() {
             loaderDialog?.dismiss()
         }
     }
+
+
+    fun downloadApk(){
+        val url = "http://13.61.115.22/getAPK"
+
+        val request = DownloadManager.Request(Uri.parse(url)).apply {
+            setTitle("Downloading App")
+            setDescription("Please wait...")
+            setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                "app_update.apk"
+            )
+            setMimeType("application/vnd.android.package-archive")
+        }
+
+        val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val downloadId = manager.enqueue(request)
+    }
+
 
     fun showToast(ctx: Context, msg: String) {
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()

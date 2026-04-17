@@ -1,12 +1,16 @@
 package com.app.magkraft
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.view.Menu
@@ -38,6 +42,7 @@ import com.google.android.material.appbar.MaterialToolbar
 class MainActivity : AppCompatActivity() {
     var authPref: AuthPref? = null
 
+    @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -78,6 +83,20 @@ class MainActivity : AppCompatActivity() {
 
         }
         )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                onDownloadComplete,
+                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            registerReceiver(
+                onDownloadComplete,
+                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE,),RECEIVER_NOT_EXPORTED
+            )
+        }
+
     }
 
 
@@ -103,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             R.id.menu_report -> { loadFragment(ReportFragment(), "Reports"); true }
             R.id.mark_attendance -> { loadFragment(ManualAttendanceFragment(), "Manual Attendance"); true }
             R.id.menu_logout -> { showLogoutDialog(this); true }
-            R.id.download_apk -> { showLogoutDialog(this); true }
+            R.id.download_apk -> { onDownloadClick(); true }
             else -> super.onOptionsItemSelected(item) // ⭐ THIS LINE IS KEY
         }
     }
@@ -151,30 +170,64 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun downloadApk(){
+    private var downloadId: Long = -1
+
+    fun onDownloadClick() {
         val url = "http://13.61.115.22/getAPK"
 
         val request = DownloadManager.Request(Uri.parse(url)).apply {
-            setTitle("Downloading App")
-            setDescription("Please wait...")
+            setTitle("App Update")
+            setDescription("Downloading latest version...")
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            setAllowedOverMetered(true)
+            setAllowedOverRoaming(true)
+
+            setMimeType("application/vnd.android.package-archive")
+
             setDestinationInExternalPublicDir(
                 Environment.DIRECTORY_DOWNLOADS,
                 "app_update.apk"
             )
-            setMimeType("application/vnd.android.package-archive")
         }
 
         val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val downloadId = manager.enqueue(request)
+        downloadId = manager.enqueue(request)
+
+        Toast.makeText(this, "Download started...", Toast.LENGTH_SHORT).show()
     }
-
-
     fun showToast(ctx: Context, msg: String) {
         Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
 
     }
 
+    private val onDownloadComplete = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+
+            if (id == downloadId) {
+                installApk(context, id)
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(onDownloadComplete)
+    }
+
+    private fun installApk(context: Context, downloadId: Long) {
+        val manager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val uri = manager.getUriForDownloadedFile(downloadId)
+
+        if (uri != null) {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        }
+    }
     fun showLogoutDialog(
         context: Context
     ) {
